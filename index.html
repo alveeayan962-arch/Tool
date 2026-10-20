@@ -37,6 +37,7 @@ p{margin:0}
 .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
 label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);min-width:0}
 input[type=text],input[type=date],input[type=number],input[type=search],textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;min-height:44px}
+select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:44px}
 textarea{resize:vertical;line-height:1.55}
 input[type=color]{width:56px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:2px}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -102,6 +103,10 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
           <input type="number" id="nDays" min="1" max="90" inputmode="numeric" value="30">
         </label>
       </div>
+      <label>কততম মাসের সিরিজ? (১ = প্রথম মাস, ২ = দ্বিতীয় মাস…)
+        <input type="number" id="series" min="1" max="12" inputmode="numeric" value="1">
+      </label>
+      <p class="sub">নতুন মাসে "২" দিলে আগের মাসের ক্যাপশন আর পোস্টার ছাড়া নতুন সেট পাবেন। একই সংখ্যা দিলে একই সেট ফিরে আসে।</p>
       <p class="sub" id="rangeHint"></p>
       <button class="btn primary" id="genBtn">ক্যাপশন আর পোস্টার বানান</button>
     </div>
@@ -135,10 +140,37 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       <label>WhatsApp নম্বর
         <input type="text" id="wa" inputmode="tel">
       </label>
-      <label>Direct Chat লিংক
-        <input type="text" id="walink">
-      </label>
       <p class="sub">প্রতিটা প্রোডাক্টের পোস্টার ওই প্রোডাক্টের নিজস্ব রঙের ধাঁচে বানানো হয়। এখানে বদলালে প্রোডাক্ট পেজে গিয়ে আবার "বানান" চাপুন।</p>
+    </div>
+    <div class="box" id="customBox">
+      <h2>নিজের প্রোডাক্ট</h2>
+      <p class="sub">নতুন প্রোডাক্ট এখানেই যোগ করুন, কোড বদলাতে হবে না। শুধু সত্যি তথ্য দিন, দাম বা লিংক লিখবেন না।</p>
+      <div id="customList"></div>
+      <label>প্রোডাক্টের নাম<input type="text" id="cpName"></label>
+      <label>এক লাইনে বর্ণনা (যেমন: AI দিয়ে লেখা ও কোডিংয়ের সাবস্ক্রিপশন)<input type="text" id="cpLine"></label>
+      <label>৪টা ফিচার, প্রতি লাইনে একটা<textarea id="cpFeats" rows="4"></textarea></label>
+      <label>সতর্কতা লাইন (প্ল্যান বা শর্ত নিয়ে একটা সত্যি কথা)<input type="text" id="cpCav"></label>
+      <label>কাদের জন্য, প্রতি লাইনে একটা (২-৪টা)<textarea id="cpAud" rows="3"></textarea></label>
+      <label>হ্যাশট্যাগ, কমা দিয়ে (যেমন: Notion, NotionBangladesh)<input type="text" id="cpTags"></label>
+      <label>ক্যাটাগরি (পোস্টারের লেআউট এর সাথে মিলিয়ে বাছা হয়)<select id="cpCat"><option value="ai">AI টুল</option><option value="edu">শিক্ষা ও লেখা</option><option value="ent">বিনোদন</option><option value="creative">ক্রিয়েটিভ সফটওয়্যার</option><option value="prod" selected>প্রোডাক্টিভিটি</option><option value="cloud">ক্লাউড ও সিকিউরিটি</option></select></label>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <label>রং ১<input type="color" id="cpC1" value="#2563eb"></label>
+        <label>রং ২<input type="color" id="cpC2" value="#7c3aed"></label>
+        <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="cpDark"> ডার্ক থিম</label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" id="cpSave">প্রোডাক্ট সেভ করুন</button>
+        <button class="btn" id="cpClear">ফর্ম খালি করুন</button>
+      </div>
+    </div>
+    <div class="box">
+      <h2>ব্যাকআপ</h2>
+      <p class="sub">লোগো, সেটিং আর নিজের প্রোডাক্ট একটা ফাইলে সেভ করে রাখুন। ফোন বদলালে বা ব্রাউজার ডেটা মুছলে ফাইলটা দিয়ে ফিরিয়ে আনতে পারবেন।</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" id="bkSave">ব্যাকআপ নামান</button>
+        <label class="btn" for="bkFile" style="cursor:pointer">ব্যাকআপ ফিরিয়ে আনুন</label>
+        <input type="file" id="bkFile" accept=".json,application/json">
+      </div>
     </div>
     <button class="btn primary" id="goHome">সেটিং হয়ে গেছে</button>
   </section>
@@ -282,107 +314,191 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   // শুধু ব্যবহারকারীর নিজের দেওয়া Netflix নমুনা ক্যাপশন থেকে নেওয়া অতিরিক্ত সুবিধা
   var XTRA={'Netflix Premium':['4K UHD প্রিমিয়াম অ্যাকাউন্ট','গ্লোবাল Access','VPN ছাড়া ব্যবহার, পিন সিকিউর','Renewable অ্যাকাউন্ট']};
   var WHY=['Genuine Subscription','দ্রুত অ্যাক্টিভেশন','অর্ডারের পরেও সাপোর্ট','পরিষ্কার Terms & Conditions','বাংলাদেশি ইউজারদের জন্য সহজ Payment Process','সমস্যা হলে Customer Support'];
-  var PH=['প্রিমিয়াম সাবস্ক্রিপশন','এখনই অর্ডার করুন','কাজ হবে আরও সহজ','সহজ অর্ডার, দ্রুত সাপোর্ট','আপনার কাজের সঙ্গী','স্মার্টভাবে শুরু করুন','Genuine Subscription','বাংলাদেশে সহজে পাবেন','সময় বাঁচান, কাজ গুছান','আজই ইনবক্স করুন','ভরসার সাথে নিন','আরও ভালো কাজের জন্য'];
+  var PH=['প্রিমিয়াম সাবস্ক্রিপশন','এখনই অর্ডার করুন','কাজ হবে আরও সহজ','সহজ অর্ডার, দ্রুত সাপোর্ট','আপনার কাজের সঙ্গী','স্মার্টভাবে শুরু করুন','Genuine Subscription','বাংলাদেশে সহজে পাবেন','সময় বাঁচান, কাজ গুছান','আজই ইনবক্স করুন','ভরসার সাথে নিন','আরও ভালো কাজের জন্য','নিশ্চিন্তে শুরু করুন','কাজের গতি বাড়ান','সহজে পেয়ে যান','প্রিমিয়াম অভিজ্ঞতা','আপনার পাশে আছি','ঝামেলাহীন সাবস্ক্রিপশন','স্মার্ট চয়েস','দ্রুত সাপোর্ট, পরিষ্কার শর্ত','কাজ হোক আরও গোছানো','এখনই জেনে নিন','বিশ্বস্ত সার্ভিস','নতুন বছর, নতুন গতি'];
   var LAST=['সহজ অর্ডার, দ্রুত সাপোর্ট','Genuine সাবস্ক্রিপশন, পরিষ্কার শর্ত','সমস্যা হলে Customer Support','বাংলাদেশি ইউজারদের জন্য সহজ Payment'];
-  var ANGLE=['তথ্যভিত্তিক','ঝাঁঝালো সরাসরি','প্রশ্ন ও গল্প','ফিচার ও কিওয়ার্ড'];
+  var ANGLE=['তথ্যভিত্তিক','ঝাঁঝালো সরাসরি','প্রশ্ন ও গল্প','ফিচার ও কিওয়ার্ড','অর্ডার ধাপ','প্রশ্ন-উত্তর','ফিচার স্পটলাইট','চেকলিস্ট','আড্ডার ঢং','আজকের টুল'];
   var STYLE_NAMES=ANGLE;
 
-  // ---------- captions: 4 styles x 5 variants = 20, rotating by day ----------
+  // ---------- captions v2: 10 styles, hash-based picks, date-aware (360+ days without repeats) ----------
   function contact(){
-    var l=[];
-    if(S.website.trim())l.push('🌐 '+S.website.trim().replace(/^https?:\/\//,''));
+    var l=['📩 অর্ডার করতে যোগাযোগ করুন'];
     if(S.page.trim())l.push('✅ Facebook Page: '+S.page.trim());
     if(S.wa.trim())l.push('📥 Verified WhatsApp: '+S.wa.trim());
-    if(S.walink.trim())l.push('💬 Direct Chat: '+S.walink.trim());
     return l.join('\n');
   }
   function bl(list,m){return list.map(function(x){return m+' '+x})}
   function rotate(arr,s){var n=arr.length,o=[];for(var i=0;i<n;i++)o.push(arr[(i+s)%n]);return o}
-  var ORDER=['যেকোনো ডিজিটাল প্রোডাক্ট সম্পর্কে বিস্তারিত জানতে এবং অর্ডার করতে এখনই আমাদের সাথে যোগাযোগ করুন 📩',
-    'প্যাকেজ, শর্ত আর অর্ডারের নিয়ম জানতে ইনবক্সে বা WhatsApp-এ মেসেজ দিন 📩',
-    'অর্ডার করতে চাইলে প্রোডাক্টের নাম লিখে মেসেজ দিন, বাকিটা আমরা বুঝিয়ে দেব 📩',
-    'কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন, আমরা সহজ করে বুঝিয়ে দেব 📩',
-    'আরও জানতে বা অর্ডার করতে নিচের যেকোনো মাধ্যমে যোগাযোগ করুন 👇'];
-  var TA=function(c){return [
-    '🚀 '+c.n+' Subscription Bangladesh | আজই শুরু করুন',
-    '🎯 '+c.n+' খুঁজছেন? সহজ সমাধান এখানেই',
-    '✨ '+c.n+' — কাজকে করুন আরও স্মার্ট',
-    '📌 '+c.n+' Subscription নিতে চান? জেনে নিন সব তথ্য',
-    '🔥 '+c.n+' Bangladesh: এক নজরে সব সুবিধা']};
-  var IA=function(c){return [
-    [c.n+' হলো '+c.line+'।','কাজের গতি বাড়াতে আর ঝামেলা কমাতে এটি অনেকেরই পছন্দের একটি টুল।'],
-    ['ঘণ্টার পর ঘণ্টা সময় নষ্ট না করে কাজ সহজ করতে চান?',c.n+' হলো '+c.line+'।'],
-    ['বাংলাদেশ থেকে '+c.n+' সাবস্ক্রিপশন নিতে চান? তাহলে এই পোস্টটা আপনার জন্য।',c.n+' হলো '+c.line+'।'],
-    ['আজকের প্রোডাক্ট '+c.n+'।',c.line+'।','কাজ সহজ আর গোছানো রাখতে চাইলে এটি দেখে নিতে পারেন।'],
-    [c.n+' দিয়ে আপনার কাজ হোক আরও দ্রুত আর গোছানো।',c.n+' হলো '+c.line+'।']]};
-  function styleA(v,c){
-    var feat=['✨ '+c.n+'-এ কী কী পাবেন?','✨ '+c.n+' দিয়ে কী কী করা যায়?','✨ '+c.n+'-এর সুবিধাগুলো:','✨ এক নজরে '+c.n+':','✨ কী কী সুবিধা থাকছে?'][v];
-    var aud=['👨‍💻 কার জন্য '+c.n+'?','👥 কাদের কাজে লাগবে?','🎯 যাঁদের জন্য এটা দারুণ:','👤 কারা ব্যবহার করতে পারেন?','🙋 আপনি কি এঁদের একজন?'][v];
-    var why=['🛡️ কেন '+c.brand+'-এ নেবেন?','🛡️ আমাদের সাথে থাকলে যা পাবেন:','✅ কেন আমাদের ওপর ভরসা করবেন?','🤝 '+c.brand+'-এর সার্ভিস:','🔒 আপনার জন্য আমাদের ব্যবস্থা:'][v];
-    var mk=['✅','✔️','🔹','👉','✅'][v];
-    var F=[feat].concat(bl(c.feats.concat(c.xtra),mk)),A=[aud].concat(bl(c.aud,'•')),W=[why].concat(bl(c.why,'✅'));
-    var order=[[F,A,W],[A,F,W],[F,W,A],[F,A,W],[W,F,A]][v];
-    var L=[TA(c)[v],''].concat(IA(c)[v],['']);
-    order.forEach(function(s){L=L.concat(s,[''])});
-    L.push(ORDER[v],'',c.contact,'',c.kw);
-    return L;
+  function mkRng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+  function pk(r,a){return a[Math.floor(r()*a.length)]}
+  function shuf(r,a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),t=b[i];b[i]=b[j];b[j]=t}return b}
+  function fill(s,c){return s.replace(/\{n\}/g,c.n).replace(/\{line\}/g,c.line).replace(/\{brand\}/g,c.brand).replace(/\{f0\}/g,c.feats[0]).replace(/\{f1\}/g,c.feats[1]).replace(/\{f2\}/g,c.feats[2]).replace(/\{f3\}/g,c.feats[3])}
+
+  var POOL={
+   hook:['আপনি কি {n} খুঁজছেন? 🤔','{n} নিয়ে ভাবছেন, কিন্তু কোথা থেকে নেবেন বুঝতে পারছেন না?','কাজের চাপে সময় বের করা কঠিন? {n} অনেক ঝামেলা কমিয়ে দিতে পারে।','একটা ভালো টুল কাজকে অর্ধেক সহজ করে দেয়। আজকের টুল: {n} ✨','আজকের প্রোডাক্ট: {n} 👇','সময় বাঁচান, কাজ গুছিয়ে করুন। সাথে থাকছে {n}।','বন্ধুরা অনেকেই জানতে চান, "{n} কীভাবে পাব?" আজ সবার জন্য এই পোস্ট।','{n} নিয়ে প্রশ্ন আছে? সব জানাব এই পোস্টে।','নতুন কিছু শিখতে বা কাজ গুছাতে চান? তাহলে {n} দেখে নিতে পারেন।','ঝামেলা ছাড়া {n} সাবস্ক্রিপশন নিতে চান? তাহলে পুরো পোস্টটা পড়ুন।','অনেকেই {n} ব্যবহার করতে চান, কিন্তু শুরুটা কোথা থেকে করবেন জানেন না। আজ সেটাই বলছি।','{n}: কাজের গতি বাড়ানোর একটা দারুণ সাথী 🚀','আপনার কাজের ধরন যা-ই হোক, {n} কাজে লাগতে পারে। কীভাবে? দেখুন 👇','একটু সময় নিয়ে পড়ুন, {n} আপনার কাজে লাগতে পারে।','সিদ্ধান্ত নেওয়ার আগে সব জেনে নেওয়াই ভালো। তাই আজ {n} নিয়ে বিস্তারিত।','কাজটা আরও দ্রুত আর গোছানো করতে চান? 💡 তাহলে {n}।','এমন একটা টুল খুঁজছেন, যা কাজ সহজ করে? তাহলে {n} আপনার জন্য।','অনেকেই বলেন, "ভালো টুল ছাড়া কাজ এগোয় না।" আজকের টুল {n}।','{n} সম্পর্কে যা জানতে চান, এক পোস্টেই পাবেন।','শুরুটা হোক স্মার্টভাবে। আজকের সাজেশন: {n} 🎯','বাংলাদেশ থেকে {n} নিতে চান? সহজ উপায় আছে আমাদের কাছে।','কাজের জন্য সঠিক টুল বাছতে ভুল হলে সময় নষ্ট। তাই {n} নিয়ে জেনে নিন।','আজ একটা কাজের টুল নিয়ে কথা বলব: {n} 🙌','যাঁরা {n} নিয়ে জানতে চেয়েছিলেন, এই পোস্ট তাঁদের জন্য।'],
+   intro:['{n} হলো {line}।','সংক্ষেপে, {n} হলো {line}।','{n} মানে {line}।','যদি জানতে চান {n} কী, তাহলে এক কথায়: {line}।','{line}, এটাই হলো {n}।','এক লাইনে {n}: {line}।','{n} হলো {line}, যা অনেকের প্রতিদিনের কাজ সহজ করে।','পরিচয়: {n}। {line}।'],
+   featH:['✨ {n}-এ কী কী পাবেন?','✨ {n} দিয়ে কী কী করা যায়?','✨ {n}-এর সুবিধাগুলো:','✨ এক নজরে {n}:','✨ কী কী সুবিধা থাকছে?','🔥 মূল সুবিধাগুলো:','📌 যা যা পাচ্ছেন-','💡 {n} কী কাজে লাগে?','🎯 কাজের ফিচারগুলো:','🧩 ভেতরে যা আছে:'],
+   mark:['✅','✔️','🔹','👉','📌','🔸','⭐','▪️'],
+   audH:['👨‍💻 কার জন্য {n}?','👥 কাদের কাজে লাগবে?','🎯 যাঁদের জন্য এটা দারুণ:','👤 কারা ব্যবহার করতে পারেন?','🙋 আপনি কি এঁদের একজন?','🤝 কাদের জন্য উপযুক্ত?','📣 যাঁদের জন্য বিশেষভাবে:','🧑‍🎓 কে কে নিতে পারেন?','🔍 এটা কি আপনার জন্য?','👀 এই পোস্টটা কাদের জন্য?'],
+   whyH:['🛡️ কেন {brand}-এ নেবেন?','🛡️ আমাদের সাথে থাকলে যা পাবেন:','✅ কেন আমাদের ওপর ভরসা করবেন?','🤝 {brand}-এর সার্ভিস:','🔒 আপনার জন্য আমাদের ব্যবস্থা:','💬 আমরা যা দিচ্ছি:','🌟 {brand}-এর সাথে নেওয়ার কারণ:','📋 সার্ভিসের দিক থেকে:','🧾 অর্ডারের আগে-পরে আমাদের কথা:','🙌 আমাদের পক্ষ থেকে:'],
+   cta:['যেকোনো ডিজিটাল প্রোডাক্ট সম্পর্কে বিস্তারিত জানতে এবং অর্ডার করতে এখনই আমাদের সাথে যোগাযোগ করুন 📩','প্যাকেজ, শর্ত আর অর্ডারের নিয়ম জানতে ইনবক্সে বা WhatsApp-এ মেসেজ দিন 📩','অর্ডার করতে চাইলে প্রোডাক্টের নাম লিখে মেসেজ দিন, বাকিটা আমরা বুঝিয়ে দেব 📩','কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন, আমরা সহজ করে বুঝিয়ে দেব 📩','আরও জানতে বা অর্ডার করতে নিচের যেকোনো মাধ্যমে যোগাযোগ করুন 👇','আজই যোগাযোগ করুন, প্যাকেজ আর শর্ত জেনে নিন 📩','নিতে চাইলে এখনই মেসেজ দিন, আমরা সাহায্য করব 💬','অর্ডারের আগে কোনো প্রশ্ন থাকলে ইনবক্সে জিজ্ঞেস করুন 📩','দেরি না করে এখনই আপনার প্যাকেজটি জেনে নিন 👇','ইনবক্সে "{n}" লিখে মেসেজ দিন, বাকিটা আমরা দেখছি 📩','বিস্তারিত জানতে বা অর্ডার করতে নিচের মাধ্যমে যোগাযোগ করুন 👇','আপনার প্রয়োজন অনুযায়ী প্যাকেজ বেছে নিতে আমাদের জানান 📩','এখনই যোগাযোগ করে আপনার সাবস্ক্রিপশন নিশ্চিত করুন ✅','আজই শুরু করুন, মেসেজ দিন 📩'],
+   closer:['🔖 পোস্টটা সেভ করে রাখুন, দরকারের সময় কাজে লাগবে।','👥 যার দরকার, তাকে ট্যাগ করে দিন।','💬 কোনো প্রশ্ন থাকলে কমেন্টে জানান।','🙏 আমাদের সাথে থাকার জন্য ধন্যবাদ।','❤️ ভালো লাগলে একটা রিঅ্যাক্ট দিন।','📣 পোস্টটা শেয়ার করে অন্যদেরও জানান।','🤝 আপনার ভরসাই আমাদের শক্তি।','⏰ দেরি না করে আজই জেনে নিন।','','',''],
+   warn:['⚠️ অর্ডারের আগে প্যাকেজ আর শর্ত ইনবক্সে জেনে নিন, কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন।','⚠️ কোন প্ল্যানে কী সুবিধা মিলবে, তা অর্ডারের আগেই ইনবক্সে জেনে নিন।','⚠️ ডিভাইস বা অ্যাকাউন্টের ধরন নিয়ে প্রশ্ন থাকলে অর্ডারের আগেই জিজ্ঞেস করুন।','⚠️ সুবিধা আর ব্যবহারসীমা প্ল্যান অনুযায়ী আলাদা হতে পারে, তাই অর্ডারের আগে জেনে নিন।','⚠️ কিছু বুঝতে অসুবিধা হলে কমেন্টে বা ইনবক্সে জিজ্ঞেস করুন, সহজ করে বুঝিয়ে দেব।','⚠️ শর্ত না জেনে অর্ডার নয়, আগে ইনবক্সে কথা বলে নিন।'],
+   punch:['🛡️ ঝামেলা ছাড়া অর্ডার, পরিষ্কার শর্ত আর অর্ডারের পরেও সাপোর্ট, সব এক জায়গায়।','🛡️ প্যাকেজ বেছে নিন আপনার প্রয়োজন অনুযায়ী, বাকিটা আমরা দেখছি।','🛡️ অর্ডার এখন আরও সহজ: প্যাকেজ জেনে নিন, কনফার্ম করুন, শুরু করুন।','🛡️ আপনার পছন্দের প্যাকেজটি বেছে নিন, সহজ প্রক্রিয়ায় সাবস্ক্রিপশন বুঝে নিন।','🛡️ সাবস্ক্রিপশনে ঝামেলা চান না? তাহলে সোজা আমাদের সাথে যোগাযোগ করুন।','🛡️ দেরি না করে প্যাকেজটা জেনে নিন, কাজ শুরু হোক আজই।'],
+   steps:[['১) ইনবক্স বা WhatsApp-এ মেসেজ দিন','২) আপনার প্যাকেজ জেনে নিন','৩) কনফার্ম করে সাবস্ক্রিপশন বুঝে নিন'],['১) প্রোডাক্টের নাম লিখে মেসেজ দিন','২) প্যাকেজ আর শর্ত শুনে নিন','৩) আপনার পছন্দ জানিয়ে অর্ডার নিশ্চিত করুন'],['ধাপ ১: আমাদের মেসেজ দিন','ধাপ ২: কোন প্যাকেজ লাগবে জানান','ধাপ ৩: নিয়ম মেনে অর্ডারটা শেষ করুন'],['১️⃣ ইনবক্স করুন','২️⃣ প্যাকেজ বেছে নিন','৩️⃣ সাবস্ক্রিপশন বুঝে নিন'],['প্রথমে মেসেজ, তারপর প্যাকেজ বাছাই, সবশেষে অর্ডার কনফার্ম। এই তিন ধাপেই কাজ শেষ।']],
+   stepH:['📝 অর্ডার করবেন যেভাবে:','📝 অর্ডার মাত্র ৩ ধাপে:','📝 কীভাবে নেবেন?','📝 অর্ডারের নিয়ম:','📝 সহজ অর্ডার প্রক্রিয়া:'],
+   spot:['আজ বিশেষভাবে বলছি এই সুবিধাটার কথা:','ফিচার স্পটলাইট 💡','{n}-এর একটা কাজের দিক:','আজকের বিশেষ সুবিধা:','একটু ভালো করে দেখুন এই সুবিধাটা:','অনেকের কাজে লাগতে পারে এমন একটা সুবিধা:'],
+   spotAfter:['এছাড়াও আরও কিছু সুবিধা আছে:','সঙ্গে থাকছে:','বাকি সুবিধাগুলোও দেখে নিন:','আর যা যা পাবেন:'],
+   chk:[['নেওয়ার আগে নিজেকে ৩টা প্রশ্ন করুন:','১) আমার কোন কাজে এটা লাগবে?','২) প্ল্যান অনুযায়ী কী কী সুবিধা মিলবে?','৩) ব্যবহারের সীমা আর শর্ত কী?','এই তিনটার উত্তর ইনবক্সে জানিয়ে দেব।'],['সাবস্ক্রিপশন নেওয়ার আগে জেনে নিন ✅','• কাজের সাথে ফিচারগুলো মেলে কি না','• প্ল্যানের সুবিধা ও সীমা কী','• অর্ডারের পর সাপোর্ট কীভাবে পাবেন','সব উত্তর পাবেন আমাদের কাছে।'],['তাড়াহুড়ো না করে ভেবে নিন 🤔','আপনার কাজ কী? কোন ফিচার লাগবে? কতদিন ব্যবহার করবেন?','এই তিনটা ঠিক করে নিলে সঠিক প্যাকেজ বাছা সহজ হয়।','বিস্তারিত জানতে ইনবক্সে আসুন।']],
+   cas:['শুভেচ্ছা বন্ধুরা 👋','কেমন আছেন সবাই? 😊','আজ একটা দরকারি কথা বলি...','একটু সময় হবে? কাজের একটা কথা বলার ছিল 🙂','সবাইকে আন্তরিক শুভেচ্ছা 🌸','বন্ধুরা, একটা ভালো খবর শেয়ার করছি 📢'],
+   casMid:['কাজ সহজ হলে মনও ভালো থাকে 😄','ছোট একটা টুল অনেক সময় বাঁচায়।','কাজের গতি বাড়ালে বাকি সময়টা আপনার নিজের।','দরকারি টুল হাতে থাকলে কাজের চাপ কম লাগে।']
+  };
+  var ENT={'Netflix Premium':1,'Amazon Prime Video':1,'Spotify Premium':1,'YouTube Premium':1};
+  POOL.hookE=['সিনেমা বা সিরিজ দেখার জন্য ভালো একটা সাবস্ক্রিপশন খুঁজছেন? 🍿','অবসরে বিনোদন চান? তাহলে {n} দেখতে পারেন।','ছুটির দিনটা আরও জমিয়ে দিতে পারে {n} 🎬','বিনোদনের জন্য সহজে সাবস্ক্রিপশন নিতে চান? পুরো পোস্টটা পড়ুন।','আজকের বিনোদন সাজেশন: {n} ✨','{n} নিতে চান কিন্তু কীভাবে নেবেন বুঝতে পারছেন না? আজ সেটাই বলছি।','অনেকেই জানতে চান, "{n} কীভাবে পাব?" আজ সবার জন্য এই পোস্ট।','আজকের প্রোডাক্ট: {n} 👇','বাংলাদেশ থেকে {n} নিতে চান? সহজ উপায় আছে আমাদের কাছে।','ঝামেলা ছাড়া {n} সাবস্ক্রিপশন নিতে চান? তাহলে পুরো পোস্টটা পড়ুন।','সিদ্ধান্ত নেওয়ার আগে সব জেনে নেওয়াই ভালো। তাই আজ {n} নিয়ে বিস্তারিত।','আজ একটা মজার বিষয় নিয়ে কথা বলব: {n} 🙌','যাঁরা {n} নিয়ে জানতে চেয়েছিলেন, এই পোস্ট তাঁদের জন্য।','{n} নিয়ে প্রশ্ন আছে? সব জানাব এই পোস্টে।'];
+  POOL.casMidE=['বিনোদন ছাড়া জীবন পানসে 😄','অবসরটা উপভোগ করতে ভালো একটা সাথী লাগে।','ছুটির দিনে ভালো কিছু দেখা বা শোনার মজাই আলাদা।','মনটা ভালো রাখতে একটু বিনোদনও দরকার।'];
+  var TITLES=[
+   function(c,r){return pk(r,['🚀 '+c.n+' Subscription Bangladesh | আজই শুরু করুন','🎯 '+c.n+' খুঁজছেন? সহজ সমাধান এখানেই','✨ '+c.n+': কাজকে করুন আরও স্মার্ট','📌 '+c.n+' Subscription নিতে চান? জেনে নিন সব তথ্য','🔥 '+c.n+' Bangladesh: এক নজরে সব সুবিধা','💡 '+c.n+' নিয়ে যা জানা দরকার'])},
+   function(c,r){return pk(r,[c.n.toUpperCase()+' Subscription Available!!! 🤫','🔥 '+c.n+' নিতে চান? আজই ইনবক্স করুন!','⚡ '+c.n+' Subscription আছে, দেরি করলে মিস!','📢 '+c.n+' লাগবে? এখনই মেসেজ দিন!','💥 '+c.n+' Subscription Ready!!!','🚨 '+c.n+' Subscription এখন আমাদের কাছে!'])},
+   function(c,r){return pk(r,['🤔 '+c.n+' কি আপনার কাজে লাগবে?','💭 '+c.n+' নিয়ে একটা গল্প','🗣️ '+c.n+' নিয়ে কথা হোক','❓ '+c.n+': আপনার প্রশ্নের উত্তর এখানে','🙂 '+c.n+', আপনার কাজের নতুন সাথী?','📖 '+c.n+' কেন অনেকে বেছে নেন?'])},
+   function(c,r){return pk(r,['🚀 '+c.n+' Subscription Bangladesh','📌 '+c.n+' Bangladesh | Subscription Available','💼 '+c.n+' Premium Subscription BD','🌟 '+c.n+' Account Bangladesh | '+c.brand,'🔔 '+c.n+' নিন সহজে | '+c.brand,'🏷️ '+c.n+' Subscription BD | Learnory Digital'])},
+   function(c,r){return pk(r,['📝 '+c.n+' অর্ডার করবেন যেভাবে','3️⃣ মাত্র ৩ ধাপে '+c.n,'🪜 '+c.n+' নিতে কী করতে হবে?','🧭 '+c.n+' নেওয়ার সহজ পথ','✅ '+c.n+': অর্ডার করা এখন সহজ','📲 '+c.n+' নিন ইনবক্সে মেসেজ দিয়ে'])},
+   function(c,r){return pk(r,['❓ '+c.n+': প্রশ্ন আর উত্তর','🗂️ '+c.n+' FAQ: সাধারণ প্রশ্নের উত্তর','🙋 '+c.n+' নিয়ে যা যা জানতে চান','📚 '+c.n+' সম্পর্কে জেনে রাখুন','💬 '+c.n+' নিয়ে সবচেয়ে সাধারণ প্রশ্ন','🔎 '+c.n+': কী, কেন, কীভাবে?'])},
+   function(c,r){return pk(r,['💡 '+c.n+': আজকের ফিচার স্পটলাইট','🔦 '+c.n+'-এর একটা সুবিধা, আজ বিস্তারিত','🎯 '+c.n+': এই সুবিধাটা কি জানতেন?','🌟 '+c.n+'-এর সেরা একটা দিক','🧩 '+c.n+' এর কাজের ফিচার নিয়ে আজ কথা','✨ ফিচার ফোকাস: '+c.n])},
+   function(c,r){return pk(r,['✅ '+c.n+' নেওয়ার আগে জেনে নিন','🧐 '+c.n+': সিদ্ধান্তের আগে কী দেখবেন?','📋 '+c.n+' নেওয়ার আগের চেকলিস্ট','⚖️ '+c.n+' কি আপনার জন্য সঠিক?','🔍 '+c.n+': নেওয়ার আগে ৩টা কথা','🤓 '+c.n+' নিয়ে বুঝেশুনে সিদ্ধান্ত'])},
+   function(c,r){return pk(r,['🌸 '+c.n+' নিয়ে আজকের আলাপ','☕ '+c.n+': একটু আড্ডা, একটু কাজের কথা','😊 '+c.n+', কাজের বন্ধু','🤝 '+c.n+' নিয়ে আমাদের কথা','📢 '+c.n+' নিয়ে একটা দরকারি কথা','🙌 '+c.n+': আপনাদের জন্য আজকের পোস্ট'])},
+   function(c,r){return pk(r,['📅 আজকের টুল: '+c.n,'🗓️ আজকের পোস্ট: '+c.n,'🌅 শুভ দিন! আজকের প্রোডাক্ট '+c.n,'⏰ আজকের দিনের জন্য একটা কাজের টুল: '+c.n,'📌 আজকের সাজেশন: '+c.n,'📆 এই দিনের স্পেশাল সাজেশন: '+c.n])}
+  ];
+  var WEEK=[ // 0=Sun
+   ['রবিবারের শুভেচ্ছা ☀️','শুভ রবিবার, দিনটা সুন্দর কাটুক 🌿','রবিবার মানে নতুন কিছু শুরু করার দিন 💪'],
+   ['সোমবারের শুভেচ্ছা 🌤️','সপ্তাহের কাজ গুছিয়ে নেওয়ার দিন, শুভ সোমবার 💪','শুভ সোমবার, নতুন সপ্তাহের কাজ শুরু হোক ভালোভাবে 🌅'],
+   ['মঙ্গলবারের শুভেচ্ছা 🌞','শুভ মঙ্গলবার, কাজের গতি বাড়ুক 🚀','দিনটা কাজের, শুভ মঙ্গলবার 💼'],
+   ['বুধবারের শুভেচ্ছা 🌼','সপ্তাহের মাঝামাঝি, শুভ বুধবার 😊','শুভ বুধবার, আজকের কাজ আজই শেষ হোক ✅'],
+   ['বৃহস্পতিবারের শুভেচ্ছা 🌇','সপ্তাহ শেষের আগের দিন, শুভ বৃহস্পতিবার 🙂','শুভ বৃহস্পতিবার, সপ্তাহের বাকি কাজগুলো গুছিয়ে ফেলুন 📋'],
+   ['শুভ শুক্রবার 🌿','জুমার দিনের শুভেচ্ছা 🤲','শুক্রবারের ছুটির দিনে শুভেচ্ছা, আরামে সময় কাটুক 😊'],
+   ['শনিবারের শুভেচ্ছা 🌅','শুভ শনিবার, ছুটির পর কাজে ফেরার দিন 💪','শনিবার সকালের শুভেচ্ছা ☀️']];
+  var SEASON={ // by month index 0-11
+   0:['শীতের সকালে উষ্ণ শুভেচ্ছা ☕','শীতের দিনে ঘরে বসে কাজ আর শেখার সুবিধাই আলাদা 🧣'],
+   1:['শীতের শেষ আর বসন্তের শুরু, শুভেচ্ছা 🌸','ফেব্রুয়ারির দিনে শুভেচ্ছা 🌷'],
+   2:['বসন্তের শুভেচ্ছা 🌼','মার্চের দিনে নতুন কাজের গতি আসুক 🚀'],
+   3:['গরমের দিনে ঘরে বসে কাজ আরামের হোক ☀️','এপ্রিলের শুভেচ্ছা, কাজের মাঝে একটু বিশ্রামও নিন 😊'],
+   4:['গরমে শরীর-মন ঠান্ডা রাখুন, কাজও গুছিয়ে করুন ☀️','মে মাসের শুভেচ্ছা 🌞'],
+   5:['বর্ষা আসছে, ঘরে বসে কাজ বা বিনোদনের জন্য তৈরি থাকুন 🌧️','জুনের শুভেচ্ছা, বৃষ্টির দিনের কাজ সহজ হোক ☔'],
+   6:['বর্ষার দিনে ঘরে বসে কাজ ও বিনোদন, দুটোই সহজ হোক 🌧️','জুলাইয়ের বৃষ্টিভেজা শুভেচ্ছা ☔'],
+   7:['বর্ষার শেষ দিকের শুভেচ্ছা 🌦️','আগস্টের দিনে নতুন কাজ আর নতুন শেখার শুভেচ্ছা 🌱'],
+   8:['শরতের শুভেচ্ছা 🌾','সেপ্টেম্বরের দিনে কাজের গতি বাড়ুক 🚀'],
+   9:['হেমন্তের শুভেচ্ছা 🍂','অক্টোবরের দিনে নতুন কিছু শেখার সুযোগ নিন 📚'],
+   10:['শীত আসছে, ঘরে বসে কাজ আর শেখার মৌসুম শুরু 🧣','নভেম্বরের শুভেচ্ছা 🍃'],
+   11:['শীতের সকালের শুভেচ্ছা ☕','বছর শেষের আগে কাজগুলো গুছিয়ে নেওয়ার সময় 📋']};
+  function toBnNum(n){return Number(n).toLocaleString('bn-BD',{useGrouping:false})}
+  function islam(dt){
+    try{
+      var f=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'numeric'}).formatToParts(dt),m=0,d=0;
+      f.forEach(function(x){if(x.type==='month')m=+x.value;if(x.type==='day')d=+x.value});
+      return {m:m,d:d};
+    }catch(e){return null}
   }
-  function styleB(v,c){
-    var title=[c.n.toUpperCase()+' Subscription Available!!! 🤫','🔥 '+c.n+' নিতে চান? আজই ইনবক্স করুন!','⚡ '+c.n+' Subscription আছে, দেরি করলে মিস!','📢 '+c.n+' লাগবে? এখনই মেসেজ দিন!','💥 '+c.n+' Subscription Ready!!!'][v];
-    var tag=['🛡️ ঝামেলা ছাড়া অর্ডার, পরিষ্কার শর্ত আর অর্ডারের পরেও সাপোর্ট, সব এক জায়গায়।','🛡️ প্যাকেজ বেছে নিন আপনার প্রয়োজন অনুযায়ী, বাকিটা আমরা দেখছি।','🛡️ অর্ডার এখন আরও সহজ: প্যাকেজ জেনে নিন, কনফার্ম করুন, শুরু করুন।','🛡️ আপনার পছন্দের প্যাকেজটি বেছে নিন, সহজ প্রক্রিয়ায় সাবস্ক্রিপশন বুঝে নিন।','🛡️ সাবস্ক্রিপশনে ঝামেলা চান না? তাহলে সোজা আমাদের সাথে যোগাযোগ করুন।'][v];
-    var fh=['যে যে সুবিধা পাচ্ছেন-','কী কী পাচ্ছেন 👇','সুবিধাগুলো দেখে নিন 👇','এক নজরে সুবিধা-','এতে যা যা থাকছে-'][v];
-    var wh=['🛡️ কেন আমাদের থেকে নেবেন?','🛡️ আমাদের সার্ভিসে যা থাকছে:','🛡️ আমাদের সাথে নিশ্চিন্ত থাকুন:','🛡️ ভরসার কারণ:','🛡️ সার্ভিসের দিক থেকে:'][v];
-    var warn=['⚠️ অর্ডারের আগে প্যাকেজ আর শর্ত ইনবক্সে জেনে নিন, কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন।','⚠️ কোন প্ল্যানে কী সুবিধা মিলবে, তা অর্ডারের আগেই ইনবক্সে জেনে নিন।','⚠️ ডিভাইস বা অ্যাকাউন্টের ধরন নিয়ে প্রশ্ন থাকলে অর্ডারের আগেই জিজ্ঞেস করুন।','⚠️ সুবিধা আর ব্যবহারসীমা প্ল্যান অনুযায়ী আলাদা হতে পারে, তাই অর্ডারের আগে জেনে নিন।','⚠️ কিছু বুঝতে অসুবিধা হলে কমেন্টে বা ইনবক্সে জিজ্ঞেস করুন, সহজ করে বুঝিয়ে দেব।'][v];
-    var cta=['তাই বসে না থেকে এখনই অর্ডার করুন 👇','দেরি না করে এখনই ইনবক্স করুন 👇','অর্ডার দিতে এখনই মেসেজ করুন 👇','আজই শুরু করতে চাইলে নিচের মাধ্যমে যোগাযোগ করুন 👇','সিদ্ধান্ত নিয়ে ফেলুন, তারপর মেসেজ দিন 👇'][v];
-    var L=[title,'',tag,c.n+' হলো '+c.line+'।','',fh].concat(bl(c.feats.concat(c.xtra),'✔'),['','👥 যাঁদের জন্য: '+c.aud.slice(0,3).join(' · '),'',wh],bl(c.why,'✅'),['',warn,'',cta,'',c.contact]);
-    return L;
+  function occasion(dt,r){
+    var m=dt.getMonth(),d=dt.getDate(),y=dt.getFullYear();
+    if(m===0&&d===1)return 'নতুন বছরের শুভেচ্ছা 🎉';
+    if(m===1&&d===21)return 'শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবসে বিনম্র শ্রদ্ধা 🇧🇩';
+    if(m===2&&d===26)return 'স্বাধীনতা দিবসের শুভেচ্ছা 🇧🇩';
+    if(m===3&&d===14)return 'শুভ নববর্ষ '+toBnNum(y-593)+'! পহেলা বৈশাখের শুভেচ্ছা 🌺';
+    if(m===4&&d===1)return 'মহান মে দিবসের শুভেচ্ছা ✊';
+    if(m===11&&d===16)return 'বিজয় দিবসের শুভেচ্ছা 🇧🇩';
+    if(m===11&&d===31)return 'বছরের শেষ দিনের শুভেচ্ছা 🎆';
+    var h=islam(dt);
+    if(h){
+      if(h.m===9)return pk(r,['রমজানের শুভেচ্ছা 🌙','রমজান মোবারক 🌙','পবিত্র রমজানের শুভেচ্ছা 🤲']);
+      if(h.m===10&&h.d<=3)return 'ঈদ মোবারক! 🌙 ঈদের শুভেচ্ছা সবাইকে';
+      if(h.m===12&&h.d>=10&&h.d<=12)return 'ঈদুল আযহার শুভেচ্ছা 🐄🌙';
+    }
+    return null;
   }
-  function styleC(v,c){
-    var open=[c.n+' নিয়ে ভাবছেন, কিন্তু কোথা থেকে নেবেন বুঝতে পারছেন না? 🤔','কাজের চাপে সময় বের করা কঠিন, তাই না? তখন '+c.n+'-এর মতো টুল অনেক ঝামেলা কমিয়ে দেয়। 💡','একটা প্রশ্ন: '+c.n+' কি আপনার কাজে লাগবে? 🤔 চলুন দেখি এটা দিয়ে কী কী করা যায়।','বন্ধুরা অনেকেই জানতে চান: "'+c.n+' কীভাবে নেব?" আজ সবার জন্য একটা পোস্ট 👇','নতুন কিছু শিখতে বা কাজ গুছাতে চান? আজকের প্রোডাক্ট '+c.n+' ✨'][v];
-    var f=c.feats;
-    var mid=[
-      [c.n+' হলো '+c.line+'।','যেমন, '+f[0]+' আর '+f[1]+', এই কাজগুলো এখানে সহজেই করা যায়।'],
-      [c.n+' হলো '+c.line+'।','প্রতিদিনের কাজে '+f[0]+' বা '+f[1]+' লাগলে এটা বেশ কাজে আসে।'],
-      [c.n+' হলো '+c.line+'।','আপনার কাজের সাথে কোন সুবিধাটা মেলে, নিচে দেখে নিন।'],
-      [c.n+' হলো '+c.line+'।','এতে '+f[0]+' করতে পারবেন, আবার '+f[3]+' ও আছে।'],
-      [c.n+' হলো '+c.line+'।','কাজ শুরু করতে পারবেন '+f[0]+' দিয়ে, তারপর বাকিগুলো কাজে লাগিয়ে।']][v];
-    var bh=['✨ মূল সুবিধাগুলো:','✨ যা যা পাবেন:','✨ এক নজরে সুবিধা:','✨ কী কী আছে?','✨ ভেতরে যা আছে:'][v];
-    var mk=['📌','✅','🔹','👉','✔️'][v];
-    var who='👥 কার কাজে লাগবে? '+c.aud.join(', ')+'।';
-    var wh=['🛡️ আমাদের থেকে নিলে:','🛡️ আমাদের সাথে থাকলে:','🛡️ সার্ভিসের দিক থেকে:','🛡️ আপনি পাবেন:','🛡️ আমাদের পক্ষ থেকে:'][v];
-    var q=['আপনার কোনো প্রশ্ন থাকলে কমেন্টে জানান বা ইনবক্সে মেসেজ দিন 👇','কমেন্টে বলুন, আপনি এটা কোন কাজে ব্যবহার করতে চান? তারপর ইনবক্সে কথা হবে 👇','আরও জানতে চাইলে "বলুন" লিখে কমেন্ট করুন, অথবা সরাসরি মেসেজ দিন 👇','বন্ধুকে ট্যাগ করুন, যার এটা কাজে লাগতে পারে 🔖 আর বিস্তারিত জানতে মেসেজ দিন 👇','এই পোস্টটা সেভ করে রাখুন, দরকারের সময় কাজে লাগবে 🔖 অর্ডার বা প্রশ্নে যোগাযোগ করুন 👇'][v];
-    var L=[open,''].concat(mid,['',bh],bl(c.feats.concat(c.xtra),mk),['',who,'',wh],bl(c.why.slice(0,4),'✅'),['',q,'',c.contact]);
-    return L;
+  function dayLine(dt,r,special){
+    var sp=occasion(dt,r);
+    if(sp)return sp;
+    var kind=r();
+    if(special||kind<0.5)return pk(r,WEEK[dt.getDay()]);
+    return pk(r,SEASON[dt.getMonth()]);
   }
-  function styleD(v,c){
-    var title=['🚀 '+c.n+' Subscription Bangladesh','📌 '+c.n+' Bangladesh | Subscription Available','💼 '+c.n+' Premium Subscription BD','🌟 '+c.n+' Account Bangladesh | '+c.brand,'🔔 '+c.n+' নিন সহজে | '+c.brand][v];
-    var para=[['আপনি কি '+c.n+' ব্যবহার করতে চান?',c.n+' হলো '+c.line+'।','বাংলাদেশ থেকে সহজে সাবস্ক্রিপশন নিতে চাইলে '+c.brand+' আছে আপনার পাশে।'],
-      [c.n+' ব্যবহার করতে চান, কিন্তু কীভাবে নেবেন বুঝতে পারছেন না?',c.n+' হলো '+c.line+'।','সহজ প্রক্রিয়ায় সাবস্ক্রিপশন নিতে '+c.brand+'-এর সাথে যোগাযোগ করতে পারেন।'],
-      ['কাজের মান আর গতি বাড়াতে '+c.n+' এখন অনেকেরই পছন্দ।',c.n+' হলো '+c.line+'।','বাংলাদেশি ইউজারদের জন্য সাবস্ক্রিপশন নেওয়ার ব্যবস্থা আছে আমাদের কাছে।'],
-      [c.n+' Subscription খুঁজছেন? এখানে পাবেন বিস্তারিত তথ্য আর সহজ অর্ডারের সুযোগ।',c.n+' হলো '+c.line+'।'],
-      ['একটা ভালো টুল কাজকে অনেক সহজ করে দেয়। আজকের টুল: '+c.n+'।',c.line+'।','অর্ডারের আগে সব জেনে নিতে ইনবক্সে আসুন।']][v];
-    var fh=['✨ '+c.n+' দিয়ে কী কী করা যায়?','✨ '+c.n+'-এ যা যা থাকছে:','✨ '+c.n+'-এর প্রধান সুবিধা:','✨ '+c.n+' কী কাজে লাগে?','✨ এক নজরে '+c.n+':'][v];
-    var mk=['✅','✔️','🔸','👉','✅'][v];
-    var wh=['🛡️ আমাদের সার্ভিসে:','🛡️ '+c.brand+'-এ যা থাকছে:','🛡️ কেন আমাদের সাথে?','🛡️ সার্ভিসের দিক থেকে:','🛡️ আপনার জন্য:'][v];
-    var L=[title,''].concat(para,['',fh],bl(c.feats.concat(c.xtra),mk),['','🎓 '+c.aud.join(' | ')+' — সবার জন্যই '+c.n+' একটি কাজের টুল।','','🔥 '+c.n+' Subscription Bangladesh','আপনি যদি '+c.kws[0]+', '+c.kws[1]+' অথবা '+c.kws[2]+' খুঁজে থাকেন, তাহলে '+c.brand+'-এর সাথে যোগাযোগ করতে পারেন।','',wh],bl(c.why.slice(0,4),'✅'),['',ORDER[v],'',c.contact,'',c.kw]);
-    return L;
+
+  // sections
+  function secFeat(c,r,opt){
+    var mk=pk(r,POOL.mark),list=c.feats.concat(c.xtra),n=opt&&opt.num,out=[fill(pk(r,POOL.featH),c)];
+    if(n)list.forEach(function(f,i){out.push((i+1)+') '+f)});
+    else out=out.concat(bl(list,mk));
+    return out;
   }
-  var STYLES=[styleA,styleB,styleC,styleD];
+  function secAud(c,r,form){
+    var h=fill(pk(r,POOL.audH),c);
+    if(form===1)return [h+' '+c.aud.join(' | ')];
+    if(form===2)return [h,c.aud.join(', ')+'।'];
+    return [h].concat(bl(c.aud,pk(r,['•','👉','🔹','✔️'])));
+  }
+  function secWhy(c,r,count){
+    var h=fill(pk(r,POOL.whyH),c),first=c.why[0],rest=shuf(r,c.why.slice(1)).slice(0,count-1),mk=pk(r,['✅','✔️','🛡️','🔒','⭐']);
+    return [h].concat(bl([first].concat(rest),mk));
+  }
+  var STYLE_FN=[
+   function(c,r){return [[TITLES[0](c,r)],[pk(r,POOL.hook),fill(pk(r,POOL.intro),c)],secFeat(c,r),secAud(c,r,Math.floor(r()*3)),secWhy(c,r,5),[pk(r,POOL.cta)]]},
+   function(c,r){return [[TITLES[1](c,r)],[pk(r,POOL.punch),fill(pk(r,POOL.intro),c)],secFeat(c,r),['👥 যাঁদের জন্য: '+c.aud.slice(0,3).join(' · ')],secWhy(c,r,4),[pk(r,POOL.warn)],[pk(r,['তাই বসে না থেকে এখনই অর্ডার করুন 👇','দেরি না করে এখনই ইনবক্স করুন 👇','অর্ডার দিতে এখনই মেসেজ করুন 👇','আজই শুরু করতে চাইলে নিচের মাধ্যমে যোগাযোগ করুন 👇','সিদ্ধান্ত নিয়ে ফেলুন, তারপর মেসেজ দিন 👇'])]]},
+   function(c,r){var f=c.feats;return [[TITLES[2](c,r)],[pk(r,POOL.hook),fill(pk(r,POOL.intro),c)],['যেমন, '+f[0]+' আর '+f[1]+', এই কাজগুলো এখানে সহজেই করা যায়। সঙ্গে আছে '+f[2]+' আর '+f[3]+'।'],secFeat(c,r),['👥 কার কাজে লাগবে? '+c.aud.join(', ')+'।'],secWhy(c,r,4),[pk(r,['আপনার কোনো প্রশ্ন থাকলে কমেন্টে জানান বা ইনবক্সে মেসেজ দিন 👇','কমেন্টে বলুন, আপনি এটা কোন কাজে ব্যবহার করতে চান? তারপর ইনবক্সে কথা হবে 👇','আরও জানতে চাইলে "বলুন" লিখে কমেন্ট করুন, অথবা সরাসরি মেসেজ দিন 👇'])]]},
+   function(c,r){return [[TITLES[3](c,r)],[pk(r,POOL.hook),fill(pk(r,POOL.intro),c),'বাংলাদেশ থেকে সহজে সাবস্ক্রিপশন নিতে চাইলে '+c.brand+' আছে আপনার পাশে।'],secFeat(c,r),['🎓 '+c.aud.join(' | ')+', সবার জন্যই '+c.n+' একটি কাজের টুল।'],['🔥 '+c.n+' Subscription Bangladesh','আপনি যদি '+c.kws[0]+', '+c.kws[1]+' অথবা '+c.kws[2]+' খুঁজে থাকেন, তাহলে '+c.brand+'-এর সাথে যোগাযোগ করতে পারেন।'],secWhy(c,r,4),[pk(r,POOL.cta)],'KW']},
+   function(c,r){return [[TITLES[4](c,r)],[pk(r,POOL.hook),fill(pk(r,POOL.intro),c)],secFeat(c,r,{num:r()<0.5}),[pk(r,POOL.stepH)].concat(pk(r,POOL.steps)),secWhy(c,r,4),[pk(r,POOL.cta)]]},
+   function(c,r){
+    var q=[['প্র: '+c.n+' কী?','উ: '+c.line+'।'],['প্র: কী কী সুবিধা পাওয়া যায়?','উ: '+c.feats[0]+', '+c.feats[1]+', '+c.feats[2]+' আর '+c.feats[3]+'।'],['প্র: কাদের কাজে লাগে?','উ: '+c.aud.slice(0,3).join(', ')+' সহ আরও অনেকের।'],['প্র: অর্ডার করব কীভাবে?','উ: ইনবক্স বা WhatsApp-এ মেসেজ দিন, প্যাকেজ আর শর্ত জানিয়ে দেব।'],['প্র: অর্ডারের পর কোনো সমস্যা হলে?','উ: সমস্যা হলে আমাদের Customer Support-এর সাথে যোগাযোগ করুন।'],['প্র: কোন প্যাকেজ নেব বুঝতে পারছি না, কী করব?','উ: আপনার কাজ জানান, আমরা প্যাকেজ বেছে নিতে সাহায্য করব।']];
+    var sel=shuf(r,q.slice(1)).slice(0,4);sel.unshift(q[0]);
+    return [[TITLES[5](c,r)],[pk(r,POOL.hook)],[].concat.apply([],sel.map(function(p){return [p[0],p[1],'']})).slice(0,-1),secWhy(c,r,4),[pk(r,POOL.cta)]];
+   },
+   function(c,r){
+    var i=Math.floor(r()*4),f=c.feats[i],others=c.feats.filter(function(x,j){return j!==i});
+    return [[TITLES[6](c,r)],[fill(pk(r,POOL.spot),c),'👉 '+f,fill(pk(r,POOL.intro),c)],[pk(r,POOL.spotAfter)].concat(bl(others.concat(c.xtra),pk(r,POOL.mark))),secAud(c,r,Math.floor(r()*3)),secWhy(c,r,4),[pk(r,POOL.cta)]];
+   },
+   function(c,r){return [[TITLES[7](c,r)],pk(r,POOL.chk),secFeat(c,r),['🛑 মনে রাখবেন: '+c.caveat],secWhy(c,r,4),[pk(r,POOL.cta)]]},
+   function(c,r){return [[TITLES[8](c,r)],[pk(r,POOL.cas),pk(r,POOL.casMid),'আজকের টুল '+c.n+'। '+c.line+'।'],secFeat(c,r),secAud(c,r,1),secWhy(c,r,4),[pk(r,POOL.cta)]]},
+   function(c,r){return [[TITLES[9](c,r)],[pk(r,POOL.hook),fill(pk(r,POOL.intro),c)],secFeat(c,r),secAud(c,r,Math.floor(r()*3)),secWhy(c,r,5),[pk(r,POOL.cta)]]}
+  ];
+  var NSTYLE=STYLE_FN.length;
   function makeKw(c,v){
-    var n=c.n,all=[n+' Subscription Bangladesh',n+' Bangladesh',n+' Subscription BD',n+' Premium Bangladesh',n+' Account',n+' Subscription',n+' BD'];
-    var r=rotate(all,v*2%all.length);
+    var n=c.n,all=[n+' Subscription Bangladesh',n+' Bangladesh',n+' Subscription BD',n+' Premium Bangladesh',n+' Account',n+' Subscription',n+' BD',n+' Pro Bangladesh'];
+    var r=rotate(all,v%all.length);
     return {kws:r,kw:r.slice(0,6).join(' | ')+' | '+c.brand};
   }
-  function caption(style,v,c){
-    var L=STYLES[style](v,c);
-    L.push('','ℹ️ '+c.caveat,'',c.tags);
+  // c: n,line,feats,aud,xtra,caveat,contact,brand,tagsBase(array)
+  function caption(style,idx,salt,c,dt,pi){
+    var r=mkRng((pi+1)*1000003+idx*7919+salt*104729+style*31);
+    var cc=Object.assign({},c),kw=makeKw(cc,Math.floor(r()*8));cc.kws=kw.kws;cc.kw=kw.kw;
+    cc.why=[c.why0].concat(shuf(r,c.whyRest));
+    if(ENT[c.n]){cc.ent=1}
+    var P0=POOL.hook,P1=POOL.casMid;
+    if(cc.ent){POOL.hook=POOL.hookE;POOL.casMid=POOL.casMidE}
+    var secs;
+    try{secs=STYLE_FN[style](cc,r)}finally{POOL.hook=P0;POOL.casMid=P1}
+    var L=[];
+    var hasKw=false;
+    // optional date line after title
+    var title=secs[0],rest=secs.slice(1);
+    var special=occasion(dt,r)!==null;
+    var dl=(style===9||special||r()<0.38)?dayLine(dt,r,style===9):null;
+    L=L.concat(title,['']);
+    if(dl)L.push(dl,'');
+    rest.forEach(function(s){
+      if(s==='KW'){hasKw=true;return}
+      L=L.concat(s,['']);
+    });
+    var cl=pk(r,POOL.closer);if(cl)L.push(cl,'');
+    L.push(cc.contact,'');
+    if(hasKw||r()<0.3)L.push(cc.kw,'');
+    L.push('ℹ️ '+c.caveat,'');
+    var tg=c.tagsBase,tl=[tg[0]].concat(shuf(r,tg.slice(1)).slice(0,5+Math.floor(r()*2)));
+    tl.push('LearnoryDigital');
+    L.push(tl.filter(function(t,j){return tl.indexOf(t)===j}).map(function(t){return '#'+t}).join(' '));
     var out=[],blank=true;
     L.forEach(function(x){
       if(x===''){if(!blank){out.push('');blank=true}}
       else{out.push(x);blank=false}
     });
     while(out.length&&out[out.length-1]==='')out.pop();
-    return out.join('\n');
+    return fill(out.join('\n'),c);
   }
 
   // ---------- icons (24x24 line icons, drawn with Path2D) ----------
@@ -493,7 +609,10 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   function noShadow(c){c.shadowColor='transparent';c.shadowBlur=0;c.shadowOffsetY=0}
   function bar(c,x,y,w,col){rr(c,x,y,w,10,5);c.fillStyle=col;c.fill()}
 
-  function phoneMock(c,x,y,w,h,T,icons,name,dark){
+  function phoneMock(){DEC++;try{return phoneMock0.apply(null,arguments)}finally{DEC--}}
+  function windowMock(){DEC++;try{return windowMock0.apply(null,arguments)}finally{DEC--}}
+  var DEC=0;
+  function phoneMock0(c,x,y,w,h,T,icons,name,dark){
     var c1=T[0],c2=T[1],body=dark?'#05080F':'#0F172A';
     c.save();shadow(c,'rgba(0,0,0,.30)',34,16);rr(c,x,y,w,h,42);c.fillStyle=body;c.fill();c.restore();
     var sx=x+9,sy=y+9,sw=w-18,sh=h-18;
@@ -527,7 +646,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     c.restore();
     rr(c,x+w/2-36,y+17,72,20,10);c.fillStyle=body;c.fill();
   }
-  function windowMock(c,x,y,w,h,T,icons,name,dark){
+  function windowMock0(c,x,y,w,h,T,icons,name,dark){
     var c1=T[0],c2=T[1];
     c.save();shadow(c,'rgba(0,0,0,.26)',34,16);rr(c,x,y,w,h,22);c.fillStyle=dark?'#121B2B':'#FFFFFF';c.fill();c.restore();
     c.save();rr(c,x,y,w,h,22);c.clip();
@@ -567,26 +686,29 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   function shade(h,f){var q=rgb(h).map(function(v){return Math.round(v*(1-f))});return '#'+q.map(function(v){return ('0'+v.toString(16)).slice(-2)}).join('')}
 
   // ---------- tone: light / dark / bold (brand gradient) ----------
+  function cr(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)}
+  function deepen(h,target){var n=0;while(cr('#FFFFFF',h)<target&&n<16){h=shade(h,0.07);n++}return h}
   function resolve(T,m){
     var c1=T[0],c2=T[1],nd=!!T[4],R={c1:c1,c2:c2};
     var mode=m==='bold'?'bold':(m==='alt'?(nd?'light':'dark'):(nd?'dark':'light'));
     R.mode=mode;
+    var whiteOn=onColor(c1)==='#FFFFFF';R.g1=whiteOn?deepen(c1,3.3):c1;R.g2=(onColor(c2)==='#FFFFFF'||whiteOn)?deepen(c2,3.3):c2;R.accent=cr(c1,'#FFFFFF')<3.2?deepen(c1,3.4):c1;
     if(mode==='light'){
       R.bg=nd?'#F3F6FB':T[2];R.ink=nd?'#12171C':T[3];R.dark=false;R.muted=rgba(R.ink,.68);
-      R.card='#FFFFFF';R.cardStroke=null;R.cardShadow=true;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=c1;R.pillFg=onColor(c1);R.shape=[c1,c2];
+      R.card='#FFFFFF';R.cardStroke=null;R.cardShadow=true;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=whiteOn?R.g1:c1;R.pillFg=onColor(c1);R.shape=[c1,c2];
     }else if(mode==='dark'){
       R.bg=nd?T[2]:shade(c2,.8);R.ink='#FFFFFF';R.dark=true;R.muted='rgba(255,255,255,.74)';
-      R.card='rgba(255,255,255,.09)';R.cardStroke='rgba(255,255,255,.14)';R.cardShadow=false;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=c1;R.pillFg=onColor(c1);R.shape=[c1,c2];
+      R.card='rgba(255,255,255,.09)';R.cardStroke='rgba(255,255,255,.14)';R.cardShadow=false;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=whiteOn?R.g1:c1;R.pillFg=onColor(c1);R.shape=[c1,c2];R.accent=c1;
     }else{
       var oc=onColor(c1),w=oc==='#FFFFFF';
-      R.bg=null;R.ink=oc;R.dark=w;R.muted=w?'rgba(255,255,255,.85)':'rgba(16,21,26,.78)';
+      R.bg=null;R.accent=oc;R.ink=oc;R.dark=w;R.muted=w?'rgba(255,255,255,.85)':'rgba(16,21,26,.78)';
       R.card=w?'rgba(255,255,255,.18)':'rgba(255,255,255,.6)';R.cardStroke=w?'rgba(255,255,255,.32)':null;R.cardShadow=false;
       R.iconBg=w?['#FFFFFF','#FFFFFF']:['#10151A','#10151A'];R.iconFg=w?c1:'#FFFFFF';R.pillBg=w?'#FFFFFF':'#10151A';R.pillFg=w?c1:'#FFFFFF';R.shape=w?['#FFFFFF','#FFFFFF']:['#000000','#000000'];
     }
     return R;
   }
   function drawBg(c,R,v,seed){
-    if(R.mode==='bold'){c.fillStyle=lg(c,0,0,1080,1080,R.c1,R.c2);c.fillRect(0,0,1080,1080)}
+    if(R.mode==='bold'){c.fillStyle=lg(c,0,0,1080,1080,R.g1,R.g2);c.fillRect(0,0,1080,1080)}
     else{c.fillStyle=R.bg;c.fillRect(0,0,1080,1080)}
     var bold=R.mode==='bold',a1=bold?.16:(R.dark?.30:.17),a2=bold?.11:(R.dark?.22:.13);
     var s1=R.shape[0],s2=R.shape[1];
@@ -597,6 +719,10 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       c.fillStyle=rgba(s2,a2+.04);for(var gx=0;gx<7;gx++)for(var gy=0;gy<5;gy++){c.beginPath();c.arc(170+gx*34,760+gy*34,4,0,7);c.fill()}}
     if(v===3){c.beginPath();c.moveTo(112,760);c.bezierCurveTo(360,640,560,900,1160,700);c.lineTo(1160,1160);c.lineTo(112,1160);c.closePath();c.fillStyle=rgba(s1,a1);c.fill();
       c.beginPath();c.moveTo(112,860);c.bezierCurveTo(400,760,640,1000,1160,820);c.lineTo(1160,1160);c.lineTo(112,1160);c.closePath();c.fillStyle=rgba(s2,a2);c.fill();circ(c,960,120,300,s1,a2)}
+    if(v===4){c.strokeStyle=rgba(s1,a1+.03);c.lineWidth=3;for(var xx=-200;xx<1300;xx+=70){c.beginPath();c.moveTo(xx,0);c.lineTo(xx-420,1080);c.stroke()}
+      circ(c,980,980,260,s2,a2)}
+    if(v===5){for(var hx=0;hx<14;hx++)for(var hy=0;hy<10;hy++){c.beginPath();c.arc(150+hx*76+(hy%2)*38,40+hy*86,hy<4?22:9,0,7);c.fillStyle=rgba(hy%3?s1:s2,a2*(hy<5?1.1:.7));c.fill()}
+      circ(c,200,980,260,s1,a1)}
     c.restore();
     if(R.mode==='light'){var rg=c.createRadialGradient(300,120,20,300,120,700);rg.addColorStop(0,'rgba(255,255,255,.65)');rg.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=rg;c.fillRect(112,0,968,1080)}
   }
@@ -616,7 +742,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       var pad=s*0.13,bw=s-pad*2,sc=Math.min(bw/lim.naturalWidth,bw/lim.naturalHeight),lw=lim.naturalWidth*sc,lh=lim.naturalHeight*sc;
       c.drawImage(lim,x+(s-lw)/2,y+(s-lh)/2,lw,lh);
     }else{
-      var m=s*0.085;rr(c,x+m,y+m,s-m*2,s-m*2,s*0.18);c.fillStyle=lg(c,x,y,x+s,y+s,R.c1,R.c2);c.fill();
+      var m=s*0.085;rr(c,x+m,y+m,s-m*2,s-m*2,s*0.18);c.fillStyle=lg(c,x,y,x+s,y+s,R.g1,R.g2);c.fill();
       c.fillStyle=onColor(R.c1);c.textAlign='center';c.textBaseline='alphabetic';c.font='800 '+Math.round(s*0.55)+'px '+FD;c.fillText(Array.from(d.name)[0].toUpperCase(),x+s/2,y+s/2+s*0.19);
     }
   }
@@ -640,11 +766,11 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=g;c.fill();
     drawIcon(c,name,cx,cy,r*1.05,R.iconFg,2.2);
   }
-  function rowCard(c,R,x,y,w,h,text,icon,sizes){
+  function rowCard(c,R,x,y,w,h,text,icon,sizes,ml){
     cardBox(c,R,x,y,w,h,h/2.4);
     var r=h*0.33,ix=x+16+r;iconDot(c,R,icon,ix,y+h/2,r);
     var txx=ix+r+18,tw=x+w-16-txx;
-    var tf=fitLines(c,text,tw,sizes||[32,30,28,26,24,22],FB,600,2);
+    var tf=fitLines(c,text,tw,sizes||[32,30,28,26,24,22],FB,600,ml||2);
     c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;c.textAlign='left';
     var lh=tf.fs*1.25,total=lh*(tf.lines.length-1);
     tf.lines.forEach(function(l,j){c.fillText(l,txx,y+h/2+tf.fs*0.34-total/2+j*lh)});
@@ -665,7 +791,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     var wa=R._wa,site=R._site;
     function waPart(x0){
       circ(c,x0+52,cy,36,'#25D366',1);drawIcon(c,'phone',x0+52,cy,38,'#FFFFFF',2.2);
-      c.textAlign='left';c.fillStyle='rgba(255,255,255,.75)';c.font='600 22px '+FB;c.fillText('WhatsApp',x0+104,cy-8);
+      c.textAlign='left';c.fillStyle='rgba(255,255,255,.92)';c.font='600 22px '+FB;c.fillText('WhatsApp',x0+104,cy-8);
       c.fillStyle='#FFFFFF';var ns=44;c.font='800 '+ns+'px '+FD;while(c.measureText(wa).width>300&&ns>28){ns-=2;c.font='800 '+ns+'px '+FD}
       c.fillText(wa,x0+104,cy+34);
     }
@@ -684,7 +810,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     }else{
       var w1=440;
       c.save();shadow(c,'rgba(0,0,0,.25)',22,8);
-      rr(c,X0,fy,w1,fh,52);c.fillStyle='#128C4B';c.fill();
+      rr(c,X0,fy,w1,fh,52);c.fillStyle='#0F7A41';c.fill();
       rr(c,X0+w1+16,fy,fw-w1-16,fh,52);c.fillStyle=fill;c.fill();c.restore();noShadow(c);
       if(R.dark){rr(c,X0+w1+16,fy,fw-w1-16,fh,52);c.strokeStyle='rgba(255,255,255,.2)';c.lineWidth=2;c.stroke()}
       if(wa)waPart(X0+10);
@@ -762,7 +888,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     pill(c,R,d.head,nx,56,nw,52);
     var nb=nameBlock(c,R,d.name,nx,56+52+14,nw,[84,76,68,60,52],2);
     var sy=Math.max(nb.bottom+22,52+s+18),sh=250;
-    c.save();shadow(c,'rgba(0,0,0,.22)',28,10);rr(c,X0,sy,W,sh,36);c.fillStyle=lg(c,X0,sy,XR,sy+sh,R.c1,R.c2);c.fill();c.restore();noShadow(c);
+    c.save();shadow(c,'rgba(0,0,0,.22)',28,10);rr(c,X0,sy,W,sh,36);c.fillStyle=lg(c,X0,sy,XR,sy+sh,R.g1,R.g2);c.fill();c.restore();noShadow(c);
     var oc=onColor(R.c1),big=72;
     c.beginPath();c.arc(X0+36+big+10,sy+sh/2,big,0,7);c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.22)':'rgba(16,21,26,.16)';c.fill();
     drawIcon(c,icons[0],X0+36+big+10,sy+sh/2,big*1.0,oc,2.1);
@@ -784,7 +910,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     var ftop=Math.max(db+14,380),n=d.feats.length,rowH=Math.min(96,(906-ftop)/n);
     d.feats.forEach(function(f,i){
       var yy=ftop+i*rowH;
-      c.fillStyle=R.c1===R.ink?R.ink:(R.mode==='bold'?R.ink:R.c1);c.font='800 52px '+FD;c.textAlign='left';c.fillText(two(i+1),X0,yy+rowH/2+18);
+      c.fillStyle=R.c1===R.ink?R.ink:(R.mode==='bold'?R.ink:R.accent);c.font='800 52px '+FD;c.textAlign='left';c.fillText(two(i+1),X0,yy+rowH/2+18);
       c.fillStyle=rgba(R.mode==='bold'?R.ink:(R.dark?'#ffffff':R.c1),.35);c.fillRect(X0+86,yy+rowH*0.2,3,rowH*0.6);
       var tf=fitLines(c,f,560-110,[32,30,28,26,24],FB,600,2);
       c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;
@@ -793,7 +919,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       if(i<n-1){c.fillStyle=rgba(R.mode==='bold'?R.ink:(R.dark?'#ffffff':R.ink),.14);c.fillRect(X0,yy+rowH,560,2)}
     });
     var cx=890,cy=ftop+(906-ftop)/2,r=Math.min(165,(906-ftop)/2);
-    c.save();shadow(c,'rgba(0,0,0,.25)',34,14);c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=lg(c,cx-r,cy-r,cx+r,cy+r,R.c1,R.c2);c.fill();c.restore();noShadow(c);
+    c.save();shadow(c,'rgba(0,0,0,.25)',34,14);c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=lg(c,cx-r,cy-r,cx+r,cy+r,R.g1,R.g2);c.fill();c.restore();noShadow(c);
     c.strokeStyle=rgba(R.mode==='bold'?R.ink:R.c1,.35);c.lineWidth=3;
     [r+22,r+46].forEach(function(rr2){c.beginPath();c.arc(cx,cy,rr2,0,7);c.stroke()});
     var ts=Math.min(190,r*1.25);logoTile(c,R,d,cx-ts/2,cy-ts/2,ts);
@@ -815,13 +941,111 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     d.feats.forEach(function(f,i){rowCard(c,R5,X0,ftop+i*(rowH+gap),430,rowH,f,icons[i],[28,26,24,22,20])});
     footerBar(c,R,false);
   }
-  var LAYOUTS=[L0,L1,L2,L3,L4,L5];
 
-  function drawPoster(cv,d,size){
+  function L6(c,d,R,icons){ // top hero banner + 2-col cards
+    var bh=330;
+    c.save();rr(c,X0,44,W,bh,40);c.clip();
+    c.fillStyle=lg(c,X0,44,XR,44+bh,R.g1,R.g2);c.fillRect(X0,44,W,bh);
+    circ(c,XR-60,60,220,'#FFFFFF',.12);circ(c,X0+120,44+bh,170,'#FFFFFF',.10);
+    c.restore();
+    var oc=onColor(R.c1),s=140;
+    logoTile(c,R,d,X0+34,44+34,s);
+    c.font='600 28px '+FB;
+    var hw=Math.min(W-s-110,c.measureText(d.head).width+44);
+    rr(c,X0+s+64,44+40,hw,48,24);c.fillStyle='rgba(255,255,255,.22)';c.fill();
+    c.fillStyle=oc;c.textAlign='left';c.fillText(d.head,X0+s+64+22,44+40+33);
+    var df=fitLines(c,d.desc,W-68,[28,26,24],FB,500,2);
+    var descTop=44+bh-34-(df.lines.length-1)*df.fs*1.38-df.fs,availH=descTop-(44+104)-12,nf=null,szs=[84,76,68,60,52,46,40];
+    for(var zi=0;zi<szs.length;zi++){var tryf=fitLines(c,d.name,W-s-100,[szs[zi]],FD,800,2);if(tryf.lines.length*tryf.fs*1.04<=availH||zi===szs.length-1){nf=tryf;break}}
+    c.font='800 '+nf.fs+'px '+FD;c.fillStyle=oc;
+    nf.lines.forEach(function(l,i){c.fillText(l,X0+s+64,44+104+nf.fs*0.85+i*nf.fs*1.04)});
+    c.font='500 '+df.fs+'px '+FB;c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.92)':'rgba(16,21,26,.8)';
+    df.lines.forEach(function(l,i){c.fillText(l,X0+34,44+bh-34-(df.lines.length-1-i)*df.fs*1.38)});
+    var top=44+bh+22,gap=16,w2=(W-gap)/2,n=d.feats.length,rows=Math.ceil(n/2),h=(906-top-gap*(rows-1))/rows;
+    h=Math.min(h,150);
+    d.feats.forEach(function(f,i){
+      var col=i%2,row=Math.floor(i/2),ww=(i===n-1&&n%2===1)?W:w2;
+      rowCard(c,R,X0+col*(w2+gap),top+row*(h+gap),ww,h,f,icons[i],[30,28,26,24,22,20]);
+    });
+    footerBar(c,R,true);
+  }
+  function L7(c,d,R,icons){ // big centered phone with callouts
+    var s=120;logoTile(c,R,d,X0,48,s);
+    var nx=X0+s+24,nw=XR-nx;
+    pill(c,R,d.head,nx,52,nw,48);
+    var nb=nameBlock(c,R,d.name,nx,52+48+10,nw,[72,66,60,54,48,42],2);
+    var by=Math.max(nb.bottom+10,48+s+14);
+    var mx=596,mh=Math.min(560,900-by-40),mw=mh*0.47;
+    c.save();c.translate(mx,by+mh/2+10);c.rotate(-0.03);
+    if(d.mock===0)phoneMock(c,-mw/2,-mh/2,mw,mh,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    else windowMock(c,-250,-mh/2.4,500,mh/1.2,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    c.restore();
+    var cw=312,ch=118,cy0=by+6,step=(mh-ch)/3;
+    var pos=[[X0,0],[XR-cw,0.6],[X0,1.8],[XR-cw,2.4]];
+    d.feats.slice(0,4).forEach(function(f,i){
+      var xx=pos[i][0],yy=cy0+pos[i][1]*step*0.95+(i%2?20:0);
+      rowCard(c,R,xx,yy,cw,ch,f,icons[i],[24,22,20],3);
+    });
+    if(d.feats[4]){
+      var yy=Math.min(cy0+2.6*step+ch+10,906-70);
+      cardBox(c,R,X0+80,Math.max(yy,830),W-160,66,33);
+      c.font='600 26px '+FB;var ft=fitLines(c,d.feats[4],W-240,[26,24,22,20],FB,600,1);c.font='600 '+ft.fs+'px '+FB;
+      c.fillStyle=R.ink;c.textAlign='center';c.fillText(ft.lines[0],X0+W/2,Math.max(yy,830)+33+ft.fs*0.34);
+    }
+    footerBar(c,R,false);
+  }
+  function L8(c,d,R,icons){ // headline hero + 5 icon columns
+    var y=56;
+    var s=130;logoTile(c,R,d,X0,y,s);
+    pill(c,R,d.head,X0+s+24,y+8,XR-(X0+s+24),48);
+    c.font='500 28px '+FB;
+    var db0=descBlock(c,R,d.desc,X0+s+24,y+68,XR-(X0+s+24),[26,24,22],2);
+    var nb=nameBlock(c,R,d.name,X0,Math.max(db0+14,y+s+16),W,[112,100,92,84,74,64,56],2);
+    var top=Math.max(nb.bottom+26,470),n=d.feats.length,gap=12,cw=(W-gap*(n-1))/n,h=906-top;
+    d.feats.forEach(function(f,i){
+      var x=X0+i*(cw+gap);
+      cardBox(c,R,x,top,cw,h,26);
+      var r=Math.min(52,cw*0.3),cx=x+cw/2,cy=top+30+r;
+      iconDot(c,R,icons[i],cx,cy,r);
+      c.fillStyle=R.accent;c.font='800 28px '+FD;c.textAlign='center';c.fillText('0'+(i+1),cx,cy+r+42);
+      var tf=fitLines(c,f,cw-22,[30,28,26,24,22,20,18],FB,600,7);
+      c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;
+      var lh=tf.fs*1.28,ty=cy+r+84;
+      tf.lines.forEach(function(l,j){c.fillText(l,cx,ty+j*lh)});
+    });
+    footerBar(c,R,true);
+  }
+  function L9(c,d,R,icons){ // magazine split panel: coloured left panel, feature list right
+    var pw=380,top=44,ph=862;
+    c.save();shadow(c,'rgba(0,0,0,.2)',30,10);rr(c,X0,top,pw,ph,40);c.fillStyle=lg(c,X0,top,X0+pw,top+ph,R.g1,R.g2);c.fill();c.restore();noShadow(c);
+    var oc=onColor(R.c1);
+    circ(c,X0+pw-20,top+ph-40,160,'#FFFFFF',.10);
+    var s=150;logoTile(c,R,d,X0+(pw-s)/2,top+36,s);
+    var nf=fitLines(c,d.name,pw-48,[56,50,46,42,38,34],FD,800,3);
+    c.font='800 '+nf.fs+'px '+FD;c.fillStyle=oc;c.textAlign='center';
+    nf.lines.forEach(function(l,i){c.fillText(l,X0+pw/2,top+36+s+34+nf.fs*0.85+i*nf.fs*1.06)});
+    var by=top+36+s+34+nf.fs*1.06*nf.lines.length+14;
+    var df=fitLines(c,d.desc,pw-56,[24,22,20],FB,500,5);
+    c.font='500 '+df.fs+'px '+FB;c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.9)':'rgba(16,21,26,.82)';
+    df.lines.forEach(function(l,i){c.fillText(l,X0+pw/2,by+df.fs+i*df.fs*1.38)});
+    var rx=X0+pw+28,rw=XR-rx;
+    var pf=fitLines(c,d.head,rw,[36,32,30,28,26],FD,800,2);
+    c.font='800 '+pf.fs+'px '+FD;c.fillStyle=R.ink;c.textAlign='left';
+    pf.lines.forEach(function(l,i){c.fillText(l,rx,top+8+pf.fs*0.9+i*pf.fs*1.12)});
+    c.fillStyle=R.pillBg;rr(c,rx,top+14+pf.fs*1.12*pf.lines.length+4,90,8,4);c.fill();
+    var ft=top+40+pf.fs*1.12*pf.lines.length+24,n=d.feats.length,gap=14,h=Math.min(140,(top+ph-ft-gap*(n-1))/n);
+    d.feats.forEach(function(f,i){rowCard(c,R,rx,ft+i*(h+gap),rw,h,f,icons[i],[28,26,24,22,20,18])});
+    footerBar(c,R,false);
+  }
+  var LAYOUTS=[L0,L1,L2,L3,L4,L5,L6,L7,L8,L9];
+
+  function drawPoster(cv,d,size,rec){
     cv.width=cv.height=size;
     var c=cv.getContext('2d'),k=size/1080;c.setTransform(k,0,0,k,0,0);
+    if(rec){var orig=CanvasRenderingContext2D.prototype.fillText;c.fillText=function(t,x,y,mw){var m=c.getTransform();rec.push({t:String(t),x:x,y:y,font:c.font,al:c.textAlign,fill:c.fillStyle,m:[m.a,m.b,m.c,m.d,m.e,m.f],w:c.measureText(String(t)).width,dec:DEC>0});return orig.call(c,t,x,y,mw)}}
+    try{
     var R=resolve(d.theme,d.tone);R._wa=d.wa;R._site=d.site;
-    drawBg(c,R,d.bgv%4,d.seed);
+    drawBg(c,R,d.bgv%6,d.seed);
     var icons=pickIcons(d.feats);
     c.textBaseline='alphabetic';
     c.save();c.translate(-56,0);
@@ -829,6 +1053,189 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     c.restore();
     c.textAlign='center';c.fillStyle=R.muted;c.font='600 22px '+FB;
     c.fillText((d.brand||'Learnory Digital')+'  ·  Premium Digital Subscriptions',540,1066);
+    }finally{if(rec)delete c.fillText}
+  }
+
+  // ---------- product categories, layout families, design brief ----------
+  var CATS={
+   'Claude Pro':'ai','Gamma Pro':'ai','StealthWriter':'ai','HeyGen':'ai','Higgsfield Pro':'ai','Lovable Pro':'ai','Cursor AI Pro':'ai','Google Gemini Pro':'ai','ElevenLabs Creator':'ai',
+   'Coursera Plus':'edu','Duolingo Super':'edu','QuillBot Premium':'edu','Turnitin Instructor':'edu','Udemy Business':'edu','Grammarly Premium':'edu','Paperpal Premium':'edu',
+   'Netflix Premium':'ent','Amazon Prime Video':'ent','Spotify Premium':'ent','YouTube Premium':'ent',
+   'Adobe Creative Cloud':'creative','Figma Pro':'creative','Freepik Premium':'creative','Envato Elements':'creative','CapCut Pro':'creative',
+   'Microsoft 365':'prod','LinkedIn Premium':'prod','Zoom Pro':'prod','Google Meet':'prod','Windows License Key':'prod',
+   'Google One':'cloud','NordVPN':'cloud','ExpressVPN':'cloud'
+  };
+  var CAT_NAMES={ai:'AI টুল',edu:'শিক্ষা ও লেখা',ent:'বিনোদন',creative:'ক্রিয়েটিভ সফটওয়্যার',prod:'প্রোডাক্টিভিটি',cloud:'ক্লাউড ও সিকিউরিটি'};
+  // layout ids: 0 list+mock, 1 centered tiles, 2 phone-right, 3 spotlight, 4 numbered editorial, 5 floating cards,
+  // 6 hero banner, 7 phone callouts, 8 five columns, 9 magazine split
+  var ALLOW={
+   ent:[2,7,3,6,1,5],
+   ai:[0,5,3,4,9,8,6,7],
+   edu:[4,9,8,1,6,0],
+   creative:[5,3,6,0,7,2,9],
+   prod:[0,4,9,8,1,5,6],
+   cloud:[1,8,3,6,9,4]
+  };
+  var LINFO=[
+   {fam:'list-mock',focal:'mock',head:'top-left',cta:'footer-bottom'},{fam:'centered-tiles',focal:'name',head:'top-center',cta:'footer-bottom'},
+   {fam:'phone-side',focal:'mock',head:'top-left',cta:'footer-bottom'},{fam:'spotlight',focal:'name',head:'top-left',cta:'footer-bottom'},
+   {fam:'editorial-list',focal:'brand-circle',head:'top-left',cta:'footer-bottom'},{fam:'floating-cards',focal:'mock',head:'top-left',cta:'footer-bottom'},
+   {fam:'hero-banner',focal:'banner',head:'in-banner',cta:'footer-bottom'},{fam:'phone-callouts',focal:'mock',head:'top-left',cta:'footer-bottom'},
+   {fam:'icon-columns',focal:'name',head:'top-left',cta:'footer-bottom'},{fam:'split-panel',focal:'side-panel',head:'right-top',cta:'footer-bottom'}];
+  function catOf(name){return CATS[name]||'prod'}
+  function mockFor(cat,i){
+    if(cat==='ent')return 0;
+    if(cat==='edu')return 1;
+    if(cat==='cloud')return i%2;
+    return i%3===0?0:1;
+  }
+  function pickLayout(cat,i,pi){var a=ALLOW[cat]||ALLOW.prod;return a[(i+pi*3)%a.length]}
+  function makeBrief(p,cat,prevLayout){
+    var li=LINFO[p.layout]||{};
+    var chars=p.feats.join('').length;
+    return {product:p.name,category:cat,layout:p.layout,family:li.fam,focal:li.focal,headlinePos:li.head,cta:li.cta,
+      background:'bg'+(p.bgv%6),tone:p.tone,mock:p.mock===0?'phone':'window',textDensity:chars<150?'low':(chars<230?'medium':'high'),
+      palette:[p.theme[0],p.theme[1]],size:1080,prevLayout:prevLayout==null?-1:prevLayout};
+  }
+  // returns list of problems; fixes what it can by editing p
+  function validateBrief(p,cat,prevLayout,nextLayout){
+    var errs=[],warns=[],fixed=[],allow=ALLOW[cat]||ALLOW.prod;
+    if(allow.indexOf(p.layout)<0){
+      var alt=allow.filter(function(l){return l!==prevLayout&&l!==nextLayout})[0];
+      if(alt!=null){p.layout=alt;fixed.push('লেআউট ক্যাটাগরির সাথে মেলেনি, বদলানো হয়েছে')}else errs.push('brief-layout');
+    }
+    if(p.layout===prevLayout){
+      var alt2=allow.filter(function(l){return l!==prevLayout&&l!==nextLayout})[0];
+      if(alt2!=null){p.layout=alt2;fixed.push('আগের দিনের মতো একই লেআউট ছিল, বদলানো হয়েছে')}else errs.push('brief-repeat');
+    }
+    if(!p.name)errs.push('brief-name');
+    if(!p.head)errs.push('brief-head');
+    if(!p.feats||p.feats.length!==5||p.feats.some(function(f){return !f}))errs.push('brief-feats');
+    if(p.name&&p.name.length>40)warns.push('brief-longname');
+    if(!p.wa)warns.push('brief-nowa');
+    if(!p.site)warns.push('brief-nosite');
+    if(p.feats&&p.feats.join('').length>300)warns.push('brief-dense');
+    if(['native','bold','alt'].indexOf(p.tone)<0){p.tone='native';fixed.push('টোন ঠিক করা হয়েছে')}
+    return {errs:errs,warns:warns,fixed:fixed};
+  }
+
+  // ---------- automated poster QA (pre-draw brief check + post-draw pixel/text checks) ----------
+  var QA_MSG={clip:'লেখা কিনারায় কেটে যেতে পারে',overlap:'দুটো লেখা একটার ওপর আরেকটা পড়তে পারে',tiny:'লেখা খুব ছোট',ellipsis:'কোনো লাইন কেটে ছোট করে দেখানো হয়েছে (…)',small:'ফিডে কিছু লেখা ছোট দেখাতে পারে',
+    contrast:'কিছু লেখার কনট্রাস্ট কম',lowcontrast:'কিছু লেখা প্রায় পড়াই যায় না',empty:'পোস্টারে অনেক ফাঁকা জায়গা',logo:'লোগো লোড হয়নি, অক্ষরের বদলি দেখাচ্ছে',
+    similar:'কাছাকাছি দিনের পোস্টারের সাথে অনেক মিল',dim:'ছবির মাপ ঠিক নয়',render:'পোস্টার আঁকতে সমস্যা হয়েছে','brief-layout':'লেআউট ক্যাটাগরির সাথে মেলে না','brief-repeat':'পরপর একই লেআউট',
+    'brief-name':'প্রোডাক্টের নাম নেই','brief-head':'শিরোনাম নেই','brief-feats':'৫টা ফিচার লাইন পূর্ণ নেই','brief-longname':'নাম অনেক লম্বা','brief-nowa':'WhatsApp নম্বর দেওয়া নেই','brief-nosite':'ওয়েবসাইট দেওয়া নেই','brief-dense':'লেখা অনেক বেশি'};
+  var QA_SIZE=540,_cc=null;
+  function parseColor(s){
+    if(!_cc){_cc=document.createElement('canvas');_cc.width=_cc.height=1}
+    var x=_cc.getContext('2d',{willReadFrequently:true});x.clearRect(0,0,1,1);x.fillStyle='#000';x.fillStyle=s;x.fillRect(0,0,1,1);
+    var d=x.getImageData(0,0,1,1).data;return [d[0],d[1],d[2],d[3]/255];
+  }
+  function relLum(r,g,b){function f(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b)}
+  function cRatio(a,b){var x=Math.max(a,b),y=Math.min(a,b);return (x+0.05)/(y+0.05)}
+  function analysePoster(p,cv,rec,size,opts){
+    var errs=[],warns=[],k=cv.width/1080,items=[],stats={};
+    if(cv.width!==size||cv.height!==size)errs.push('dim');
+    var nm=p.name;
+    if(opts&&opts.logoExpected&&!(p.logo&&p.logo.naturalWidth>0))warns.push('logo');
+    rec.forEach(function(r){
+      if(r.dec||Math.abs(r.m[1])>0.001)return;
+      var fs=parseFloat((/(\d+(?:\.\d+)?)px/.exec(r.font)||[0,0])[1]),ax=(r.m[0]*r.x+r.m[4])/k,ay=(r.m[3]*r.y+r.m[5])/k,w=r.w;
+      var x0=r.al==='center'?ax-w/2:(r.al==='right'?ax-w:ax);
+      items.push({t:r.t,fs:fs,x0:x0,x1:x0+w,top:ay-fs*0.85,bot:ay+fs*0.25,ay:ay,fill:r.fill});
+    });
+    stats.n=items.length;
+    var mn=999;
+    items.forEach(function(it){
+      if(it.x0<20||it.x1>1060||it.bot>1074||it.top<6)errs.push('clip');
+      if(it.fs<mn)mn=it.fs;
+    });
+    stats.minFont=mn;
+    if(items.some(function(it){return /…$/.test(it.t)}))errs.push('ellipsis');
+    if(mn<15)errs.push('tiny');else if(mn<19.5)warns.push('small');
+    // overlap
+    var ov=false;
+    for(var i=0;i<items.length&&!ov;i++)for(var j=i+1;j<items.length;j++){
+      var a=items[i],b=items[j],ix=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),iy=Math.min(a.bot,b.bot)-Math.max(a.top,b.top);
+      if(ix>2&&iy>2){var ar=ix*iy,sm=Math.min((a.x1-a.x0)*(a.bot-a.top),(b.x1-b.x0)*(b.bot-b.top));if(ar>0.25*sm){ov=true;break}}
+    }
+    if(ov)errs.push('overlap');
+    // pixels
+    var ctx=cv.getContext('2d',{willReadFrequently:true}),W=cv.width,img;
+    try{img=ctx.getImageData(0,0,W,W)}catch(e){warns.push('render');return {errs:errs,warns:warns,stats:stats}}
+    var D=img.data;
+    function px(x,y){x=Math.max(0,Math.min(W-1,Math.round(x*k)));y=Math.max(0,Math.min(W-1,Math.round(y*k)));var o=(y*W+x)*4;return [D[o],D[o+1],D[o+2]]}
+    var worst=99;
+    items.forEach(function(it){
+      if(typeof it.fill!=='string'||!it.t.trim())return;
+      var fc=parseColor(it.fill),fl=relLum(fc[0],fc[1],fc[2]),rs=[];
+      var y0t=it.top+it.fs*0.15,y1t=it.bot-it.fs*0.05;
+      for(var gy2=0;gy2<4;gy2++)for(var gx2=0;gx2<14;gx2++){
+        var c=px(it.x0+(it.x1-it.x0)*(gx2+0.5)/14,y0t+(y1t-y0t)*(gy2+0.5)/4);
+        if(cRatio(fl,relLum(c[0],c[1],c[2]))<1.25)continue;
+        var r=fc[0]*fc[3]+c[0]*(1-fc[3]),g=fc[1]*fc[3]+c[1]*(1-fc[3]),bb=fc[2]*fc[3]+c[2]*(1-fc[3]);
+        rs.push(cRatio(relLum(r,g,bb),relLum(c[0],c[1],c[2])));
+      }
+      if(rs.length<3)return;
+      rs.sort(function(a,b){return a-b});
+      var med=rs[Math.floor(rs.length*0.7)];
+      if(med<worst){worst=med;stats.worstText=it.t.slice(0,24)+'|'+it.fill+'|fs'+it.fs+'|'+Math.round(it.x0)+','+Math.round(it.ay)}
+    });
+    stats.minContrast=Math.round(worst*10)/10;
+    if(worst<1.8)errs.push('lowcontrast');else if(worst<3)warns.push('contrast');
+    // empty regions: 8x6 grid over content area
+    var gx=8,gy=6,x0=96,x1=984,y0=40,y1=920,empty=0;
+    for(var cy=0;cy<gy;cy++)for(var cx=0;cx<gx;cx++){
+      var sx=x0+(x1-x0)*cx/gx,ex=x0+(x1-x0)*(cx+1)/gx,sy=y0+(y1-y0)*cy/gy,ey=y0+(y1-y0)*(cy+1)/gy,n=0,sum=0,sq=0;
+      for(var yy=sy;yy<ey;yy+=18)for(var xx=sx;xx<ex;xx+=18){var c=px(xx,yy),l=0.3*c[0]+0.59*c[1]+0.11*c[2];n++;sum+=l;sq+=l*l}
+      var sd=Math.sqrt(Math.max(0,sq/n-(sum/n)*(sum/n)));if(sd<2.5)empty++;
+    }
+    stats.emptyRatio=Math.round(empty/(gx*gy)*100)/100;
+    if(stats.emptyRatio>0.45)warns.push('empty');
+    // composition signature (16x16 luminance)
+    var sg=document.createElement('canvas');sg.width=sg.height=16;var sc=sg.getContext('2d',{willReadFrequently:true});sc.drawImage(cv,0,0,16,16);
+    var sd2=sc.getImageData(0,0,16,16).data,sig=[];for(var q=0;q<256;q++)sig.push(0.3*sd2[q*4]+0.59*sd2[q*4+1]+0.11*sd2[q*4+2]);
+    stats.sig=sig;
+    return {errs:errs,warns:warns,stats:stats};
+  }
+  function sigDiff(a,b){var s=0;for(var i=0;i<256;i++)s+=Math.abs(a[i]-b[i]);return s/256/255}
+  function runQAOnce(p,opts){
+    var cv=document.createElement('canvas'),rec=[];
+    try{drawPoster(cv,p,QA_SIZE,rec)}catch(e){return {errs:['render'],warns:[],stats:{}}}
+    return analysePoster(p,cv,rec,QA_SIZE,opts);
+  }
+  // full QA + auto-fix for one poster. ctx: {cat,prevLayout,nextLayout,prevSigs,logoExpected}
+  function qaPoster(p,ctx){
+    var br=validateBrief(p,ctx.cat,ctx.prevLayout,ctx.nextLayout),fixed=br.fixed.slice();
+    var errs0=br.errs.slice(),warns0=br.warns.slice();
+    var allow=ALLOW[ctx.cat]||ALLOW.prod,tones=['native','bold','alt'];
+    var cands=[{l:p.layout,t:p.tone}];
+    tones.forEach(function(t){if(t!==p.tone)cands.push({l:p.layout,t:t})});
+    allow.forEach(function(l){if(l!==p.layout&&l!==ctx.prevLayout&&l!==ctx.nextLayout)tones.forEach(function(t){cands.push({l:l,t:(t===p.tone?p.tone:t)})})});
+    var orig={l:p.layout,t:p.tone},best=null,tries=0;
+    function tkey(l,t){return [l,t,p.bgv,p.head,p.mock].join('|')}
+    var origKey=tkey(orig.l,orig.t);
+    for(var i=0;i<cands.length&&tries<8;i++){
+      if(i>0&&ctx.used&&ctx.used[tkey(cands[i].l,cands[i].t)])continue;
+      p.layout=cands[i].l;p.tone=cands[i].t;tries++;
+      var r=runQAOnce(p,{logoExpected:ctx.logoExpected}),w=r.warns.slice(),e=r.errs.slice();
+      if(ctx.prevSigs&&r.stats.sig){
+        var close=ctx.prevSigs.some(function(s){return sigDiff(s,r.stats.sig)<0.03});
+        if(close)w.push('similar');
+      }
+      var score=e.length*10+w.filter(function(x){return x!=='logo'}).length;
+      if(!best||score<best.score)best={l:p.layout,t:p.tone,score:score,e:e,w:w,sig:r.stats.sig,stats:r.stats};
+      if(score===0)break;
+    }
+    p.layout=best.l;p.tone=best.t;if(ctx.used)ctx.used[tkey(best.l,best.t)]=1;
+    if(best.l!==orig.l||best.t!==orig.t)fixed.push('QA ধরা সমস্যার কারণে '+(best.l!==orig.l?'লেআউট':'রঙের টোন')+' বদলানো হয়েছে');
+    var res={errs:errs0.concat(best.e),warns:warns0.concat(best.w),fixed:fixed,stats:best.stats,tries:tries};
+    return res;
+  }
+  function qaText(res){
+    var o=[];
+    res.errs.forEach(function(k){o.push('✖ '+(QA_MSG[k]||k))});
+    res.warns.forEach(function(k){o.push('⚠ '+(QA_MSG[k]||k))});
+    return o;
   }
   // ---------- save helpers (plain browser downloads) ----------
   function saveBlob(blob,name){
@@ -870,7 +1277,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   $('goHome').addEventListener('click',function(){showView(cur>=0?'prod':'home')});
   $('back').addEventListener('click',function(){showView('home')});
 
-  [['brand','brand'],['website','website'],['page','page'],['wa','wa'],['walink','walink']].forEach(function(p){
+  [['brand','brand'],['website','website'],['page','page'],['wa','wa']].forEach(function(p){
     var el=$(p[0]);el.value=S[p[1]]||'';
     el.addEventListener('input',function(){S[p[1]]=el.value;save()});
   });
@@ -899,7 +1306,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   function openProduct(i){
     cur=i;days=[];$('results').innerHTML='';
     $('pName').textContent=P[i][0];$('pLine').textContent=P[i][1];
-    $('nDays').value=S.days||30;
+    $('nDays').value=S.days||30;$('series').value=S.series||1;
     updateRange();showView('prod');$('genBtn').textContent='ক্যাপশন আর পোস্টার বানান';
     loadLogo(P[i][0]).then(refreshLogoUI);refreshLogoUI();
   }
@@ -925,39 +1332,67 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     if(cur<0)return;delete LOGOS[P[cur][0]];delete LOGO_IMG[P[cur][0]];saveLogos();refreshLogoUI();renderHome();toast('লোগো সরানো হয়েছে');if(days.length)render();
   });
   function getStart(){return $('startDate').value?new Date($('startDate').value+'T09:00:00'):new Date()}
+  function getSeries(){var s=parseInt($('series').value,10);if(!(s>=1))s=1;if(s>12)s=12;return s}
   function getN(){var n=parseInt($('nDays').value,10);if(!(n>=1))n=1;if(n>90)n=90;return n}
   function updateRange(){
     var s=getStart(),n=getN(),e=new Date(s.getTime()+(n-1)*86400000);
-    $('rangeHint').textContent=bn(n)+' দিন: '+dateLabel(s)+' থেকে '+dateLabel(e)+'।'+(n>20?' ২০ দিনের পর ক্যাপশনের ঢং আর সাজানো নতুন করে ঘুরবে।':'');
+    $('rangeHint').textContent=bn(n)+' দিন: '+dateLabel(s)+' থেকে '+dateLabel(e)+'।'+'';
   }
   $('startDate').addEventListener('change',updateRange);
   $('nDays').addEventListener('input',updateRange);
 
   // ---------- build for one product ----------
-  function buildFor(pi,start,n){
-    var p=P[pi],out=[],name=p[0];
+
+  // deterministic per-product design plan: unique (layout,tone,bg,head,mock) per day, varied day to day
+  var SEQ={};
+  function designSeq(pi,name,cat,upto){
+    var key=name+'|'+cat,s=SEQ[key];
+    if(s&&s.length>=upto)return s;
+    s=s||[];var al=ALLOW[cat]||ALLOW.prod,seen={};
+    s.forEach(function(x){seen[x.k]=1});
+    var seed=0;for(var z=0;z<name.length;z++)seed=(seed*31+name.charCodeAt(z))>>>0;
+    for(var i=s.length;i<upto;i++){
+      var r=mkRng(seed+i*2654435761),prev=s[i-1]||{},prev2=s[i-2]||{},tries=0,x;
+      do{
+        var lay=al[Math.floor(r()*al.length)];
+        x={lay:lay,tone:Math.floor(r()*3),bg:Math.floor(r()*6),head:Math.floor(r()*PH.length),mock:mockFor(cat,Math.floor(r()*1000))};
+        x.k=[x.lay,x.tone,x.bg,x.head,x.mock].join('|');tries++;
+        var ok=!seen[x.k]&&x.lay!==prev.lay&&x.lay!==prev2.lay&&x.tone!==prev.tone&&x.bg!==prev.bg&&x.head!==prev.head;
+        if(tries>60)ok=!seen[x.k]&&x.lay!==prev.lay;
+        if(tries>400)ok=!seen[x.k];
+      }while(!ok&&tries<2000);
+      seen[x.k]=1;s.push(x);
+    }
+    SEQ[key]=s;return s;
+  }
+  function buildFor(pi,start,n,off,opts){
+    off=off||0;opts=opts||{};
+    var p=P[pi],out=[],name=p[0],cat=catOf(name),al=ALLOW[cat]||ALLOW.prod;
     var site=S.website.trim().replace(/^https?:\/\//,''),wa=S.wa.trim(),brand=S.brand.trim()||'Learnory Digital';
     var th=THEME[name]||THEME_FALLBACK,aud=AUD[name]||AUD_FALLBACK,xtra=XTRA[name]||[];
-    var ct=contact(),rest=WHY.slice(1);
-    for(var i=0;i<n;i++){
-      var k=(i+pi*7)%20,st=k%4,v=(Math.floor(k/4)+Math.floor(i/20))%5;
-      var c={n:name,line:p[1],feats:p[2],aud:aud,xtra:xtra,caveat:p[3],contact:ct,brand:brand};
-      c.why=[WHY[0]].concat(rotate(rest,i%rest.length).slice(0,4));
-      var kw=makeKw(c,v);c.kws=kw.kws;c.kw=kw.kw;
-      var tg=p[4],tl=[tg[0]].concat(rotate(tg.slice(1),i%Math.max(1,tg.length-1)).slice(0,6));
-      tl.push('LearnoryDigital');
-      c.tags=tl.filter(function(t,j){return tl.indexOf(t)===j}).map(function(t){return '#'+t}).join(' ');
-      var dt=new Date(start.getTime()+i*86400000);
-      out.push({
-        n:i+1,date:dt,name:name,slug:slug(name),angle:st,caption:caption(st,v,c),
-        poster:{brand:brand,name:name,desc:p[1],head:PH[(i+pi)%PH.length],
+    var ct=contact(),sq=opts.legacy?null:designSeq(pi,name,cat,off+n+2),prevL=off>0?(opts.legacy?pickLayout(cat,off-1,pi):sq[off-1].lay):-1,sigs=[],used={},logoExpected=!!LOGOS[name];if(sq)sq.forEach(function(x){var tn=TONE[x.tone];used[[x.lay,tn,x.bg,x.head,x.mock].join('|')]=1});
+    for(var q=0;q<n;q++){
+      var i=q+off,st=(i+pi*3)%NSTYLE;
+      var c={n:name,line:p[1],feats:p[2],aud:aud,xtra:xtra,caveat:p[3],contact:ct,brand:brand,why0:WHY[0],whyRest:WHY.slice(1),tagsBase:p[4]};
+      var dt=new Date(start.getTime()+q*86400000);
+      var poster={brand:brand,name:name,desc:p[1],head:PH[(i*5+pi)%PH.length],
           feats:rotate(p[2].slice(0,4),(i*3+pi)%4).concat(LAST[(i+pi)%LAST.length]),
-          wa:wa,site:site,theme:th,layout:LAY[(i+pi)%LAY.length],tone:TONE[(i+Math.floor(i/6))%3],bgv:(i*3+pi)%4,seed:i+pi*3,mock:(i+pi)%2,logo:null}
-      });
+          wa:wa,site:site,theme:th,layout:opts.legacy?LAY[(i+pi*3)%LAY.length]:sq[i].lay,
+          tone:opts.legacy?TONE[(Math.floor(i/LAY.length)+pi)%3]:TONE[sq[i].tone],bgv:opts.legacy?(Math.floor(i/30)*5+i+pi)%6:sq[i].bg,seed:i+pi*3,
+          mock:opts.legacy?(Math.floor(i/10)+i)%2:sq[i].mock,logo:logoImg(name)};
+      if(!opts.legacy)poster.head=PH[sq[i].head];
+      var qa=null,brief=null;
+      if(!opts.noQA&&!opts.legacy){
+        qa=qaPoster(poster,{cat:cat,prevLayout:prevL,nextLayout:opts.legacy?-1:sq[i+1].lay,prevSigs:sigs.slice(-3),used:used,logoExpected:logoExpected});
+        if(qa.stats&&qa.stats.sig){sigs.push(qa.stats.sig);delete qa.stats.sig}
+      }
+      brief=makeBrief(poster,cat,prevL);
+      prevL=poster.layout;
+      out.push({n:q+1,date:dt,name:name,slug:slug(name),angle:st,caption:caption(st,i,Math.floor(i/NSTYLE),c,dt,pi),poster:poster,brief:brief,qa:qa,cat:cat});
     }
     return out;
   }
-  var LAY=[0,2,1,4,3,5],TONE=['native','bold','alt'];
+  var LAY=[0,6,2,8,1,9,3,7,4,5],TONE=['native','bold','alt'];
   function pd(d){d.poster.logo=logoImg(d.name);return d.poster}
 
   // ---------- results ----------
@@ -983,6 +1418,10 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     var top=document.createElement('div');top.className='box';
     var nm=P[cur][0];
     top.innerHTML='<h2>'+esc(nm)+': '+bn(days.length)+' দিনের পোস্ট তৈরি</h2><p class="sub">ক্যাপশনে হাত দিয়ে বদলাতে পারবেন। ফেসবুকে "শিডিউল" দিয়ে তারিখ অনুযায়ী বসান।</p>';
+    var okN=0,fixN=0,warnN=0;days.forEach(function(d){if(!d.qa)return;if(!d.qa.errs.length&&!d.qa.warns.length){okN++}else warnN++;if(d.qa.fixed.length)fixN++});
+    var qs=document.createElement('p');qs.className='sub';qs.id='qaSummary';
+    qs.textContent='পোস্টার QA: '+bn(okN)+'টা সমস্যাহীন'+(fixN?', '+bn(fixN)+'টায় স্বয়ংক্রিয় ঠিক করা হয়েছে':'')+(warnN?', '+bn(warnN)+'টায় সতর্কতা আছে':'')+'। (এটা শুধু লেখা কাটা, ওভারল্যাপ, কনট্রাস্ট, ফাঁকা অংশ আর মিল যাচাই করে, সৌন্দর্য নিশ্চিত করে না। নিজে একবার চোখ বুলিয়ে নিন।)';
+    top.appendChild(qs);
     var bulk=document.createElement('div');bulk.className='bulk';
     var z=document.createElement('button');z.className='btn primary';z.id='zipBtn';z.textContent='সব ছবি ডাউনলোড (ZIP)';
     z.addEventListener('click',function(){saveZip(z)});
@@ -998,6 +1437,10 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       var card=document.createElement('div');card.className='card';
       var meta=document.createElement('div');meta.className='meta';
       meta.innerHTML='<b>দিন '+bn(d.n)+'</b><span>'+dateLabel(d.date)+'</span><span class="pill">'+esc(ANGLE[d.angle])+'</span>';
+      var qa=document.createElement('div');qa.className='qa';
+      if(d.qa){var msgs=qaText(d.qa);
+        qa.innerHTML=(msgs.length?msgs.map(esc).join(' · '):'✔ QA: ঠিক আছে')+(d.qa.fixed.length?' · 🔧 '+esc(d.qa.fixed.join('; ')):'')+' · '+esc(CAT_NAMES[d.cat]||'')+' / '+esc(d.brief.family);
+        qa.style.cssText='font-size:13px;color:var(--muted)';if(d.qa.errs.length)qa.style.color='#b42318';else if(d.qa.warns.length)qa.style.color='#9a6700'}
       var ta=document.createElement('textarea');ta.rows=Math.min(16,d.caption.split('\n').length+1);ta.value=d.caption;
       ta.id='cap'+i;ta.setAttribute('aria-label','দিন '+d.n+' এর ক্যাপশন');
       ta.addEventListener('input',function(){d.caption=ta.value;autosize(ta)});
@@ -1007,17 +1450,19 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       var cp=document.createElement('button');cp.className='btn small primary';cp.textContent='ক্যাপশন কপি';
       cp.addEventListener('click',function(){copyString(ta.value,ta)});
       var sv=document.createElement('button');sv.className='btn small';sv.textContent='ছবি সেভ';
-      sv.addEventListener('click',function(){posterBlob(d).then(function(b){saveBlob(b,d.slug+'-day-'+two(d.n)+'.jpg');toast('সেভ হচ্ছে')})});
+      sv.addEventListener('click',function(){posterBlob(d).then(function(b){saveBlob(b,d.slug+'-day-'+two(d.n)+'.jpg');toast('সেভ হচ্ছে')},function(e){toast('ছবি সেভ হয়নি: '+e.message)})});
       act.appendChild(cp);act.appendChild(sv);
-      card.appendChild(meta);card.appendChild(ta);card.appendChild(act);card.appendChild(cv);
+      card.appendChild(meta);if(d.qa)card.appendChild(qa);card.appendChild(ta);card.appendChild(act);card.appendChild(cv);
       box.appendChild(card);autosize(ta);
     });
     setTimeout(function(){box.querySelectorAll('textarea').forEach(autosize)},400);
   }
   function posterBlob(d){
-    return new Promise(function(res){
-      var off=document.createElement('canvas');drawPoster(off,pd(d),1080);
-      off.toBlob(function(b){res(b)},'image/jpeg',0.95);
+    return new Promise(function(res,rej){
+      var off=document.createElement('canvas');
+      try{drawPoster(off,pd(d),1080)}catch(e){rej(new Error('পোস্টার আঁকা যায়নি'));return}
+      if(off.width!==1080||off.height!==1080){rej(new Error('ছবির মাপ ঠিক হয়নি'));return}
+      off.toBlob(function(b){b&&b.size>5000?res(b):rej(new Error('ছবি তৈরি হয়নি'))},'image/jpeg',0.95);
     });
   }
   function saveZip(btn){
@@ -1030,7 +1475,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       var d=days[i];
       posterBlob(d).then(function(b){return b.arrayBuffer()}).then(function(ab){
         files.push({name:d.slug+'-day-'+two(d.n)+'.jpg',data:new Uint8Array(ab)});i++;setTimeout(next,0);
-      });
+      },function(e){btn.disabled=false;btn.textContent=old;toast('ZIP বানানো যায়নি: দিন '+bn(d.n)+', '+e.message)});
     }
     next();
   }
@@ -1038,9 +1483,9 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   $('genBtn').addEventListener('click',function(){
     if(cur<0)return;
     var btn=$('genBtn');btn.disabled=true;btn.textContent='বানানো হচ্ছে...';
-    S.days=getN();save();
+    S.days=getN();S.series=getSeries();save();
     var go=function(){
-      days=buildFor(cur,getStart(),getN());
+      days=buildFor(cur,getStart(),getN(),(getSeries()-1)*30);
       btn.disabled=false;btn.textContent='আবার বানান';
       render();
       var r=$('results');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1054,6 +1499,82 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   var t0=new Date(Date.now()+86400000);
   $('startDate').value=iso(t0);
   renderHome();
+  window.__lpf={buildFor:buildFor,P:P,NSTYLE:NSTYLE,ALLOW:ALLOW,catOf:catOf,runQAOnce:runQAOnce,qaPoster:qaPoster,drawPoster:drawPoster,analysePoster:analysePoster,sigDiff:sigDiff,validateBrief:validateBrief,makeBrief:makeBrief};
+
+  // ---------- custom products + backup ----------
+  var CKEY='learnory-custom-v1',BASE_LEN=P.length,CUST=[],editIdx=-1;
+  try{CUST=JSON.parse(localStorage.getItem(CKEY)||'[]')||[]}catch(e){CUST=[]}
+  function saveCust(){try{localStorage.setItem(CKEY,JSON.stringify(CUST));return true}catch(e){return false}}
+  function mergeCustom(){
+    P.length=BASE_LEN;
+    CUST.forEach(function(x){
+      P.push([x.name,x.line,x.feats.slice(0,4),x.caveat,x.tags]);
+      THEME[x.name]=[x.c1,x.c2,x.dark?'#0F1720':mixLight(x.c1),x.dark?'#FFFFFF':'#16202A',x.dark?1:0];
+      AUD[x.name]=x.aud;CATS[x.name]=x.cat||'prod';
+    });
+  }
+  function mixLight(h){var q=rgb(h).map(function(v){return Math.round(v*0.12+255*0.88)});return '#'+q.map(function(v){return ('0'+v.toString(16)).slice(-2)}).join('')}
+  function lines(id){return $(id).value.split('\n').map(function(s){return s.trim()}).filter(Boolean)}
+  function renderCust(){
+    var h='';
+    CUST.forEach(function(x,i){h+='<div class="crow" style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px"><b>'+esc(x.name)+'</b><span><button class="btn small" data-ed="'+i+'">বদলান</button> <button class="btn small" data-del="'+i+'">মুছুন</button></span></div>'});
+    $('customList').innerHTML=h||'<p class="sub">এখনো নিজের কোনো প্রোডাক্ট যোগ করা হয়নি।</p>';
+  }
+  function clearForm(){
+    editIdx=-1;['cpName','cpLine','cpFeats','cpCav','cpAud','cpTags'].forEach(function(k){$(k).value=''});
+    $('cpC1').value='#2563eb';$('cpC2').value='#7c3aed';$('cpDark').checked=false;$('cpCat').value='prod';$('cpSave').textContent='প্রোডাক্ট সেভ করুন';
+  }
+  $('cpClear').addEventListener('click',clearForm);
+  $('cpSave').addEventListener('click',function(){
+    var name=$('cpName').value.trim(),line=$('cpLine').value.trim(),feats=lines('cpFeats'),cav=$('cpCav').value.trim(),aud=lines('cpAud');
+    var tags=$('cpTags').value.split(',').map(function(s){return s.trim().replace(/^#/,'').replace(/\s+/g,'')}).filter(Boolean);
+    if(!name||!line){toast('নাম আর এক লাইনের বর্ণনা দিন');return}
+    if(feats.length<4){toast('কমপক্ষে ৪টা ফিচার লিখুন, প্রতি লাইনে একটা');return}
+    if(!cav){toast('সতর্কতা লাইনটা লিখুন');return}
+    if(aud.length<2){toast('কাদের জন্য, কমপক্ষে ২ লাইন লিখুন');return}
+    if(/https?:\/\/|www\.|\.com|টাকা|মূল্য|দাম|৳/i.test([name,line,feats.join(' '),cav,aud.join(' ')].join(' '))){toast('লিংক বা দামের কথা লিখবেন না');return}
+    if(!tags.length)tags=[name.replace(/[^A-Za-z0-9]/g,'')||'Subscription'];
+    var dup=P.some(function(p,i){return p[0].toLowerCase()===name.toLowerCase()&&!(editIdx>=0&&i===BASE_LEN+editIdx)});
+    if(dup){toast('এই নামে প্রোডাক্ট আগে থেকেই আছে');return}
+    var obj={name:name,line:line,feats:feats.slice(0,4),caveat:cav,aud:aud.slice(0,4),tags:tags,c1:$('cpC1').value,c2:$('cpC2').value,dark:$('cpDark').checked,cat:$('cpCat').value};
+    if(editIdx>=0)CUST[editIdx]=obj;else CUST.push(obj);
+    if(!saveCust()){toast('সেভ করা গেল না, ব্রাউজারে জায়গা নেই');return}
+    mergeCustom();clearForm();renderCust();renderHome();toast('প্রোডাক্ট সেভ হয়েছে, প্রোডাক্ট ট্যাবে আছে');
+  });
+  $('customList').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.ed!=null){
+      var x=CUST[+b.dataset.ed];editIdx=+b.dataset.ed;
+      $('cpName').value=x.name;$('cpLine').value=x.line;$('cpFeats').value=x.feats.join('\n');$('cpCav').value=x.caveat;$('cpAud').value=x.aud.join('\n');$('cpTags').value=x.tags.join(', ');
+      $('cpC1').value=x.c1;$('cpC2').value=x.c2;$('cpDark').checked=!!x.dark;$('cpCat').value=x.cat||'prod';$('cpSave').textContent='বদল সেভ করুন';$('cpName').scrollIntoView({block:'center'});
+    }else if(b.dataset.del!=null){
+      if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='নিশ্চিত?';return}
+      var gone=CUST.splice(+b.dataset.del,1)[0];delete THEME[gone.name];delete AUD[gone.name];delete CATS[gone.name];
+      saveCust();mergeCustom();renderCust();renderHome();toast('মুছে ফেলা হয়েছে');
+    }
+  });
+  $('bkSave').addEventListener('click',function(){
+    var data={app:'learnory-post-factory',v:1,settings:S,logos:LOGOS,custom:CUST};
+    saveBlob(new Blob([JSON.stringify(data)],{type:'application/json'}),'learnory-backup-'+iso(new Date())+'.json');toast('ব্যাকআপ সেভ হচ্ছে');
+  });
+  $('bkFile').addEventListener('change',function(){
+    var f=this.files[0],inp=this;if(!f)return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var d=JSON.parse(rd.result);
+        if(d.app!=='learnory-post-factory')throw 0;
+        if(d.settings)Object.keys(d.settings).forEach(function(k){S[k]=d.settings[k]});save();
+        if(d.logos){Object.keys(LOGOS).forEach(function(k){delete LOGOS[k]});Object.keys(d.logos).forEach(function(k){LOGOS[k]=d.logos[k]});saveLogos()}
+        if(Array.isArray(d.custom)){CUST=d.custom;saveCust()}
+        mergeCustom();renderCust();renderHome();
+        ['brand','website','page','wa'].forEach(function(k){if($(k))$(k).value=S[k]||''});
+        toast('ব্যাকআপ ফিরে এসেছে');
+      }catch(e){toast('এই ফাইলটা ব্যাকআপ ফাইল নয়')}
+    };
+    rd.readAsText(f);inp.value='';
+  });
+  mergeCustom();renderCust();renderHome();
 })();
 </script>
 </body>

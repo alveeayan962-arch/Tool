@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Learnory পোস্ট ফ্যাক্টরি</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@600;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#EEF2F0; --surface:#FFFFFF; --fg:#13201B; --muted:#5B6B64; --line:#D3DDD8;
+  --accent:#0C7A63; --accent-fg:#FFFFFF;
+  --font-display:"Anek Bangla","Hind Siliguri",system-ui,sans-serif;
+  --font-body:"Hind Siliguri","Anek Bangla",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0E1613; --surface:#16211D; --fg:#E7F0EC; --muted:#93A59D; --line:#27362F;
+    --accent:#3FD3AB; --accent-fg:#06231B;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.6;
+  padding-block:16px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--font-display);font-weight:800;font-size:26px;line-height:1.2;margin:0}
+h2{font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.25;margin:0}
+p{margin:0}
+.sub{color:var(--muted);font-size:15px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--line);padding:4px;border-radius:12px}
+.tab{font:inherit;font-weight:600;border:0;background:transparent;color:var(--muted);padding:10px 4px;border-radius:9px;min-height:44px}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--fg)}
+.panel{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel[hidden]{display:none}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);min-width:0}
+input[type=text],input[type=date],input[type=number],input[type=search],textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;min-height:44px}
+textarea{resize:vertical;line-height:1.55}
+input[type=color]{width:56px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;border-radius:10px;min-height:46px;cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.small{min-height:42px;padding:8px 12px;font-size:15px}
+.btn:disabled{opacity:.6}
+.plist{display:flex;flex-direction:column;gap:8px}
+.pcard{font:inherit;text-align:left;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;cursor:pointer;width:100%;min-width:0}
+.pcard b{font-family:var(--font-display);font-size:18px}
+.pcard span{color:var(--muted);font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard .no{color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.meta b{font-family:var(--font-display);color:var(--fg);font-size:17px}
+.pill{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px}
+canvas.poster{width:100%;height:auto;aspect-ratio:1/1;border-radius:10px;display:block;background:var(--line)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bulk{display:flex;flex-direction:column;gap:8px}
+.back{align-self:flex-start}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:15px;z-index:20;max-width:90vw;text-align:center}
+.toast[hidden]{display:none}
+.logobox{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logoprev{width:72px;height:72px;border-radius:14px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.logoprev img{max-width:60px;max-height:60px;display:block}
+.logoprev span{font-size:12px;color:#8a948f;text-align:center;line-height:1.2;padding:2px}
+.logobtns{display:flex;flex-direction:column;gap:8px;flex:1;min-width:150px}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.themechip{display:inline-flex;gap:4px;align-items:center}
+.themechip i{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Learnory পোস্ট ফ্যাক্টরি</h1>
+    <p class="sub">প্রতিটা প্রোডাক্টের ক্যাপশন আর পোস্টার, এক জায়গা থেকে।</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-home" aria-selected="true" data-tab="home">প্রোডাক্ট</button>
+    <button class="tab" role="tab" id="tab-set" aria-selected="false" data-tab="set">সেটিং</button>
+  </div>
+
+  <section class="panel" id="panel-home">
+    <label>প্রোডাক্ট খুঁজুন
+      <input type="search" id="q" placeholder="যেমন: Claude, Netflix, VPN">
+    </label>
+    <div class="plist" id="plist"></div>
+  </section>
+
+  <section class="panel" id="panel-prod" hidden>
+    <button class="btn small back" id="back">← সব প্রোডাক্ট</button>
+    <div class="box">
+      <h2 id="pName"></h2>
+      <p class="sub" id="pLine"></p>
+      <div class="row">
+        <label>শুরুর তারিখ
+          <input type="date" id="startDate">
+        </label>
+        <label>কত দিনের (১ থেকে ৯০)
+          <input type="number" id="nDays" min="1" max="90" inputmode="numeric" value="30">
+        </label>
+      </div>
+      <p class="sub" id="rangeHint"></p>
+      <button class="btn primary" id="genBtn">ক্যাপশন আর পোস্টার বানান</button>
+    </div>
+    <div class="box" id="logoBox">
+      <h2 style="font-size:18px">প্রোডাক্টের লোগো (ঐচ্ছিক)</h2>
+      <p class="sub">যে লোগো ব্যবহারের অনুমতি আপনার আছে, সেটা দিন। পোস্টারের ওপরে বসবে। না দিলে নামের প্রথম অক্ষর দিয়ে সাজানো আইকন থাকবে।</p>
+      <div class="logobox">
+        <div class="logoprev" id="logoPrev"><span>লোগো নেই</span></div>
+        <div class="logobtns">
+          <label class="btn small" for="logoFile" id="logoPick" style="cursor:pointer">লোগো বাছুন</label>
+          <input type="file" id="logoFile" accept="image/*">
+          <button class="btn small" id="logoDel" hidden>লোগো সরান</button>
+        </div>
+      </div>
+    </div>
+    <div id="results" class="panel"></div>
+  </section>
+
+  <section class="panel" id="panel-set" hidden>
+    <div class="box">
+      <h2>যোগাযোগের তথ্য</h2>
+      <label>ব্র্যান্ডের নাম
+        <input type="text" id="brand">
+      </label>
+      <label>ওয়েবসাইট
+        <input type="text" id="website">
+      </label>
+      <label>Facebook Page-এর নাম
+        <input type="text" id="page">
+      </label>
+      <label>WhatsApp নম্বর
+        <input type="text" id="wa" inputmode="tel">
+      </label>
+      <label>Direct Chat লিংক
+        <input type="text" id="walink">
+      </label>
+      <p class="sub">প্রতিটা প্রোডাক্টের পোস্টার ওই প্রোডাক্টের নিজস্ব রঙের ধাঁচে বানানো হয়। এখানে বদলালে প্রোডাক্ট পেজে গিয়ে আবার "বানান" চাপুন।</p>
+    </div>
+    <button class="btn primary" id="goHome">সেটিং হয়ে গেছে</button>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+  var KEY='learnory-post-factory-v3',LKEY='learnory-logos-v1';
+  var DEFAULTS={brand:'Learnory Digital',website:'https://www.learnorydigital.com',page:'Learnory Digital',wa:'01324893306',walink:'https://wa.me/8801324893306',days:30};
+  var S=load();
+  function load(){
+    try{var r=localStorage.getItem(KEY);if(r)return Object.assign({},DEFAULTS,JSON.parse(r))}catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULTS));
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+  var LOGOS=(function(){try{var r=localStorage.getItem(LKEY);if(r)return JSON.parse(r)||{}}catch(e){}return {}})();
+  function saveLogos(){try{localStorage.setItem(LKEY,JSON.stringify(LOGOS));return true}catch(e){return false}}
+  var $=function(id){return document.getElementById(id)};
+  function bn(n){return Number(n).toLocaleString('bn-BD')}
+  function two(n){return String(n).padStart(2,'0')}
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  function toast(t){var el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){el.hidden=true},2600)}
+  function dateLabel(dt){
+    try{return new Intl.DateTimeFormat('bn-BD',{weekday:'long',day:'numeric',month:'long'}).format(dt)}catch(e){return dt.toDateString()}
+  }
+  function iso(dt){return dt.getFullYear()+'-'+two(dt.getMonth()+1)+'-'+two(dt.getDate())}
+  function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+
+  // ---------- products: [name, line, [4 features], caveat, [hashtags]] ----------
+  // ---------- products: [name, line, [4 features], caveat, [hashtags]] ----------
+  var P=[
+   ['Claude Pro','লেখালেখি, কোডিং, গবেষণা আর ডকুমেন্ট বিশ্লেষণে সাহায্য করে এমন AI সাবস্ক্রিপশন',['আর্টিকেল, রিপোর্ট ও ইমেইল লেখা','কোড লেখা ও ডিবাগিং','ডকুমেন্ট ও ফাইল বিশ্লেষণ','Projects দিয়ে কাজ গুছিয়ে রাখা'],'Free প্ল্যানের তুলনায় বেশি ব্যবহারের সুযোগ, তবে সীমা প্ল্যান অনুযায়ী।',['ClaudePro','ClaudeAI','AnthropicClaude','AItools','PremiumAISubscription','ClaudeBangladesh']],
+   ['Adobe Creative Cloud','ফটো, ভিডিও, লোগো আর UI ডিজাইনের কাজে Adobe-এর ক্রিয়েটিভ অ্যাপের সাবস্ক্রিপশন',['Photoshop দিয়ে ফটো এডিটিং','Illustrator দিয়ে লোগো ও ভেক্টর','Premiere Pro দিয়ে ভিডিও এডিটিং','After Effects, Lightroom ও Adobe Express'],'কোন অ্যাপ পাবেন তা প্যাকেজের ওপর নির্ভর করে।',['AdobeCreativeCloud','AdobeCC','AdobePhotoshop','AdobeIllustrator','AdobePremierePro','GraphicDesign','VideoEditing']],
+   ['Microsoft 365','ডকুমেন্ট, স্প্রেডশিট, প্রেজেন্টেশন আর ইমেইলের কাজের জন্য Microsoft-এর অফিস স্যুট',['Word, Excel, PowerPoint','Outlook দিয়ে ইমেইল ও ক্যালেন্ডার','OneDrive-এ ক্লাউড স্টোরেজ','একসঙ্গে ফাইল শেয়ার করে কাজ'],'অ্যাপ ও স্টোরেজ সাবস্ক্রিপশনের ধরন অনুযায়ী বদলায়।',['Office365','Microsoft365','MicrosoftOffice','MicrosoftWord','MicrosoftExcel','MicrosoftPowerPoint']],
+   ['LinkedIn Premium','চাকরি খোঁজা আর পেশাগত নেটওয়ার্ক বাড়াতে LinkedIn-এর Career ও Business প্ল্যান',['InMail দিয়ে নতুন যোগাযোগ (নির্দিষ্ট সীমায়)','আপনার প্রোফাইল কে দেখেছে তার তথ্য','চাকরির আবেদনে অতিরিক্ত ইনসাইট','Business প্ল্যানে অ্যাডভান্সড সার্চ ও নেটওয়ার্কিং'],'Career আর Business প্ল্যানের সুবিধা এক নয়।',['LinkedInPremium','LinkedInCareer','LinkedInBusiness','LinkedInForProfessionals','LinkedInBangladesh']],
+   ['Coursera Plus','বিশ্ববিদ্যালয় ও প্রতিষ্ঠানের অনলাইন কোর্স আর প্রফেশনাল সার্টিফিকেট শেখার সাবস্ক্রিপশন',['IT, Data Science, Business, AI সহ নানা বিষয়ের কোর্স','প্রফেশনাল সার্টিফিকেট প্রোগ্রাম','নিজের সময়মতো শেখা','শর্ত পূরণ করলে সার্টিফিকেট'],'সব কোর্স Coursera Plus-এর অন্তর্ভুক্ত নয়।',['CourseraPlus','CourseraCertificate','OnlineLearning','ProfessionalCertificates','OnlineCourses','LearnOnline']],
+   ['Google One','Drive, Gmail আর Photos-এর জন্য বাড়তি ক্লাউড স্টোরেজ',['ফাইল, ছবি ও ভিডিও রাখার জায়গা','Gmail-এর জন্য অতিরিক্ত স্পেস','Google Photos ব্যাকআপ','ফাইল ও ফোল্ডার শেয়ার'],'স্টোরেজের পরিমাণ প্ল্যান অনুযায়ী আলাদা।',['GoogleOne','GoogleDriveStorage','GoogleCloudStorage','ExtraCloudStorage','GooglePhotosBackup','CloudStorageBD']],
+   ['Duolingo Super','ইংরেজিসহ নানা ভাষা শেখার Duolingo-র পেইড সাবস্ক্রিপশন',['বিজ্ঞাপন ছাড়া শেখা','হার্টের চিন্তা ছাড়া অনুশীলন (সমর্থিত প্ল্যানে)','অগ্রগতি অনুযায়ী প্র্যাকটিস','ডাউনলোড করা লেসন অফলাইনে (যেখানে প্রযোজ্য)'],'সুবিধা Duolingo-র বর্তমান প্ল্যান ও অ্যাপ ভার্সন অনুযায়ী বদলাতে পারে।',['DuolingoSuper','DuolingoPremium','LearnEnglish','LanguageLearning','EnglishLearning']],
+   ['QuillBot Premium','লেখা paraphrase, grammar check আর summary করার AI রাইটিং অ্যাসিস্ট্যান্ট',['Paraphraser','Grammar Checker','Summarizer','অনুবাদ টুল (সমর্থিত ভাষায়)'],'আউটপুট ব্যবহারের আগে নিজে যাচাই করুন।',['QuillBotPremium','QuillBotParaphraser','QuillBotGrammarChecker','AIWritingAssistant','ParaphrasingTool','WritingTools']],
+   ['Spotify Premium','বিজ্ঞাপন ছাড়া গান শোনা আর অফলাইনে শোনার মিউজিক সাবস্ক্রিপশন',['বিজ্ঞাপনমুক্ত গান','সমর্থিত ডিভাইসে অফলাইনে শোনা','পছন্দের গান বেছে শোনা','নিজের প্লেলিস্ট বানানো'],'সুবিধা দেশ, ডিভাইস ও প্ল্যান অনুযায়ী বদলাতে পারে।',['SpotifyPremium','SpotifyBangladesh','AdFreeMusic','MusicStreaming','PremiumMusic']],
+   ['Gamma Pro','AI দিয়ে প্রেজেন্টেশন, ডকুমেন্ট আর পিচ ডেক বানানোর টুল',['দ্রুত AI প্রেজেন্টেশন','কনটেন্ট অনুযায়ী ডিজাইন ও লেআউট','পিচ ডেক তৈরি','সমর্থিত ফরম্যাটে শেয়ার ও এক্সপোর্ট'],'AI ক্রেডিট ও এক্সপোর্ট অপশন প্ল্যান অনুযায়ী বদলাতে পারে।',['GammaPro','GammaAI','GammaPresentation','AIPresentationMaker','AIPresentation','PresentationDesign']],
+   ['Figma Pro','UI/UX ডিজাইন, প্রোটোটাইপ আর টিমের সঙ্গে ডিজাইন করার প্ল্যান',['ওয়েবসাইট ও অ্যাপের ইন্টারফেস ডিজাইন','ক্লিকযোগ্য প্রোটোটাইপ','টিমের সঙ্গে একসঙ্গে কাজ','ডেভেলপারদের জন্য ডিজাইন হ্যান্ডঅফ'],'ফিচার ও ব্যবহারসীমা Figma-এর নির্দিষ্ট প্ল্যান অনুযায়ী।',['FigmaPro','FigmaDesign','FigmaUIUX','UIUXDesign','WebDesign','AppDesign']],
+   ['Turnitin Instructor','শিক্ষক ও প্রতিষ্ঠানের জন্য লেখার মিল (Similarity) যাচাইয়ের প্ল্যাটফর্ম',['Similarity Report','উৎসের সঙ্গে মিল শনাক্ত','লেখা পর্যালোচনায় শিক্ষকদের টুল','সমর্থিত ব্যবস্থায় AI লেখার সম্ভাব্য উপস্থিতি বিশ্লেষণ'],'AI Detection শতভাগ নির্ভুল নয়। সুবিধা প্যাকেজ ও প্রতিষ্ঠানের সেটআপের ওপর নির্ভর করে।',['Turnitin','TurnitinInstructor','TurnitinSimilarityReport','PlagiarismChecker','AcademicIntegrity']],
+   ['Zoom Pro','অনলাইন মিটিং, ভার্চুয়াল ক্লাস আর দূরের টিমের সঙ্গে যোগাযোগের Zoom-এর পেইড প্ল্যান',['গ্রুপ ভিডিও মিটিং','ক্লাউডে মিটিং রেকর্ডিং (প্ল্যানের সীমায়)','আগাম মিটিং শিডিউল','স্ক্রিন শেয়ার'],'মিটিংয়ের সময় ও অংশগ্রহণকারীর সংখ্যা প্ল্যান অনুযায়ী।',['ZoomPro','ZoomMeeting','VideoConferencing','OnlineMeeting','VirtualClassroom','BusinessMeetings']],
+   ['Netflix Premium','সিনেমা, ওয়েব সিরিজ, ডকুমেন্টারি আর Netflix Originals দেখার সাবস্ক্রিপশন',['নানা ধরনের সিনেমা ও সিরিজ','Netflix Originals','স্মার্টফোন, টিভি, কম্পিউটারে দেখা','ডাউনলোড করে অফলাইনে দেখা (সমর্থিত কনটেন্টে)'],'ভিডিও কোয়ালিটি আর একসঙ্গে কয়টা ডিভাইসে দেখা যাবে তা প্ল্যান ও শর্তের ওপর নির্ভর করে।',['Netflix','NetflixPremium','NetflixBangladesh','NetflixSeries','NetflixOriginals','OTTSubscription']],
+   ['Amazon Prime Video','সিনেমা, ওয়েব সিরিজ আর Amazon Originals দেখার Prime Video সাবস্ক্রিপশন',['নানা দেশের সিনেমা ও সিরিজ','Amazon Originals','স্মার্ট টিভি, ফোন, ট্যাবলেটে দেখা','সমর্থিত কনটেন্টে ডাউনলোড ও HD/4K'],'লাইব্রেরি ও কোয়ালিটি দেশ, ডিভাইস ও প্ল্যান অনুযায়ী বদলায়।',['AmazonPrimeVideo','PrimeVideo','AmazonOriginals','MovieStreaming','OTTSubscription','PremiumStreaming']],
+   ['StealthWriter','AI-তৈরি লেখা আরও স্বাভাবিক ও সাবলীলভাবে নতুন করে লেখার টুল',['লেখা নতুনভাবে লেখা','ভাষা আরও স্বাভাবিক করা','কনটেন্টের প্রবাহ উন্নত করা','ব্লগ ও আর্টিকেলের কাজ দ্রুত করা'],'AI-detection এড়ানোর কোনো নিশ্চয়তা নেই। একাডেমিক কাজে প্রতিষ্ঠানের নিয়ম মানুন।',['StealthWriter','AIWritingTool','AITextRewriter','ContentWritingTools','AIHumanizer']],
+   ['HeyGen','AI অ্যাভাটার আর টেক্সট থেকে ভিডিও বানানোর প্ল্যাটফর্ম',['AI অ্যাভাটার ভিডিও','স্ক্রিপ্ট থেকে ভিডিও','AI voiceover','সমর্থিত ভাষায় ভিডিও অনুবাদ'],'ভিডিওর দৈর্ঘ্য, ক্রেডিট ও রেজোলিউশন প্ল্যান অনুযায়ী।',['HeyGen','HeyGenAI','AIAvatar','AIVideoGenerator','TextToVideo','AIVideoCreation']],
+   ['Higgsfield Pro','টেক্সট ও ছবি থেকে AI ভিডিও আর সিনেমাটিক শট বানানোর প্ল্যাটফর্ম',['AI ভিডিও জেনারেশন','ছবি থেকে ভিডিও','টেক্সট প্রম্পট থেকে ভিডিও','সিনেমাটিক ক্যামেরা মুভমেন্ট'],'AI মডেল, ক্রেডিট ও রেজোলিউশন প্ল্যান অনুযায়ী বদলাতে পারে।',['Higgsfield','HiggsfieldPro','AIVideoGenerator','ImageToVideo','TextToVideo','CinematicAI']],
+   ['Udemy Business','পেশাগত দক্ষতা, প্রযুক্তি আর ব্যবসা শেখার নির্বাচিত অনলাইন কোর্স',['IT ও প্রোগ্রামিং','ম্যানেজমেন্ট ও ব্যবসায়িক দক্ষতা','ডেটা ও AI','নিজের সময়ে শেখা'],'কোর্স লাইব্রেরি ও সার্টিফিকেট প্ল্যান ও অ্যাকাউন্টের ধরন অনুযায়ী।',['UdemyBusiness','UdemyCourses','OnlineLearning','ProfessionalDevelopment','SkillDevelopment','LearnOnline']],
+   ['Google Meet','অনলাইন মিটিং, ভার্চুয়াল ক্লাস আর ভিডিও কলের Google-এর সার্ভিস',['HD ভিডিও মিটিং','স্ক্রিন শেয়ার','Google Calendar দিয়ে মিটিং ঠিক করা','সমর্থিত ভাষায় লাইভ ক্যাপশন'],'রেকর্ডিংয়ের মতো পেইড ফিচার শুধু নির্দিষ্ট Google Workspace প্ল্যানে মেলে।',['GoogleMeet','GoogleWorkspace','OnlineMeeting','VideoConferencing','VirtualClassroom','BusinessMeetings']],
+   ['Windows License Key','Windows অ্যাক্টিভেট করার ২৫ অক্ষরের প্রোডাক্ট কী',['সামঞ্জস্যপূর্ণ Windows সংস্করণ অ্যাক্টিভেট','অ্যাক্টিভেশনের পর পার্সোনালাইজেশন সেটিংস','সমর্থিত সংস্করণে আপডেট','সমর্থনকাল অনুযায়ী নিরাপত্তা আপডেট'],'লাইসেন্সের ধরন, সংস্করণ ও ডিভাইস অনুযায়ী অ্যাক্টিভেশনের শর্ত আলাদা। শুধু কী থাকলেই সব লাইসেন্স বৈধ বা ট্রান্সফারযোগ্য হয় না।',['WindowsLicenseKey','WindowsActivationKey','WindowsProductKey','Windows11License','Windows10License','MicrosoftWindows']],
+   ['Freepik Premium','স্টক ছবি, ভেক্টর, টেমপ্লেট আর AI ক্রিয়েটিভ টুলের ডিজাইন প্ল্যাটফর্ম',['স্টক ইমেজ ও ভেক্টর','ডিজাইন টেমপ্লেট','উপলভ্য AI ইমেজ জেনারেশন ও এডিটিং','প্ল্যান অনুযায়ী প্রিমিয়াম ডাউনলোড'],'বাণিজ্যিক ব্যবহারের আগে অ্যাসেটের লাইসেন্স যাচাই করুন।',['Freepik','FreepikPremium','StockImages','GraphicDesignResources','VectorGraphics','DesignResources']],
+   ['Envato Elements','টেমপ্লেট, স্টক ফটো, ভিডিও টেমপ্লেট আর ফন্টের ডিজিটাল অ্যাসেট প্ল্যাটফর্ম',['সোশ্যাল মিডিয়া ও মার্কেটিং টেমপ্লেট','স্টক ফটো','ভিডিও ও মোশন গ্রাফিক্স টেমপ্লেট','ফন্ট, আইকন ও ইলাস্ট্রেশন'],'ডাউনলোডের সীমা ও বাণিজ্যিক ব্যবহারের অধিকার লাইসেন্সের শর্ত অনুযায়ী।',['EnvatoElements','GraphicDesignAssets','VideoTemplates','StockPhotos','MotionGraphics','CreativeAssets']],
+   ['CapCut Pro','Reels, Shorts আর অন্যান্য ভিডিও এডিট করার প্রিমিয়াম সাবস্ক্রিপশন',['প্রিমিয়াম ইফেক্ট, ফিল্টার ও ট্রানজিশন','স্বয়ংক্রিয় ক্যাপশন (সমর্থিত ভাষায়)','ব্যাকগ্রাউন্ড রিমুভ','উপলভ্য AI এডিটিং টুল'],'ফিচার ও এক্সপোর্ট অপশন প্ল্যান, অঞ্চল ও ডিভাইস অনুযায়ী বদলাতে পারে।',['CapCutPro','CapCutVideoEditor','VideoEditing','ReelsEditing','YouTubeShorts','VideoEditorPro']],
+   ['YouTube Premium','বিজ্ঞাপন ছাড়া ভিডিও দেখা, ব্যাকগ্রাউন্ড প্লে আর অফলাইন ডাউনলোডের সাবস্ক্রিপশন',['বিজ্ঞাপনমুক্ত ভিডিও','ব্যাকগ্রাউন্ডে প্লে','সমর্থিত ভিডিও অফলাইনে দেখা','অন্তর্ভুক্ত প্ল্যানে YouTube Music Premium'],'সব প্ল্যানে YouTube Music থাকে না। সুবিধা দেশ ও প্ল্যান অনুযায়ী বদলায়।',['YouTubePremium','AdFreeYouTube','YouTubeMusicPremium','YouTubeBangladesh','PremiumStreaming']],
+   ['Lovable Pro','সাধারণ ভাষায় নির্দেশ দিয়ে ওয়েবসাইট ও ওয়েব অ্যাপ বানানোর AI প্ল্যাটফর্ম',['AI দিয়ে ওয়েবসাইট তৈরি','ওয়েব অ্যাপের UI ও কার্যকারিতা','ভিজ্যুয়াল এডিটিং','সমর্থিত প্ল্যানে GitHub সংযোগ'],'AI ক্রেডিট ও ব্যবহারসীমা বর্তমান প্ল্যান অনুযায়ী।',['LovablePro','LovableAI','AIWebsiteBuilder','AIAppBuilder','NoCodeDevelopment','WebAppDevelopment']],
+   ['NordVPN','ইন্টারনেট সংযোগ এনক্রিপ্ট করে অনলাইনে বাড়তি গোপনীয়তা দিতে সাহায্য করা VPN সার্ভিস',['এনক্রিপ্টেড সংযোগ','প্রকৃত IP আড়াল করতে সাহায্য','বিভিন্ন দেশের সার্ভার','পাবলিক Wi-Fi-তে বাড়তি নিরাপত্তা'],'VPN পুরো অনলাইন পরিচয় গোপন রাখার নিশ্চয়তা দেয় না। সুবিধা প্ল্যান অনুযায়ী।',['NordVPN','VPNService','OnlinePrivacy','InternetSecurity','SecureBrowsing','VPNBangladesh']],
+   ['ExpressVPN','ইন্টারনেট সংযোগ এনক্রিপ্ট করে অনলাইনে বাড়তি গোপনীয়তা দিতে সাহায্য করা প্রিমিয়াম VPN',['এনক্রিপ্টেড সংযোগ','প্রকৃত IP আড়াল করতে সাহায্য','Lightway প্রোটোকলে দ্রুত সংযোগ','Windows, macOS, Android, iOS-এ ব্যবহার'],'VPN পুরো অনলাইন পরিচয় গোপন রাখার নিশ্চয়তা দেয় না। সুবিধা প্ল্যান অনুযায়ী।',['ExpressVPN','VPNService','OnlinePrivacy','InternetSecurity','SecureBrowsing','VPNBangladesh']],
+   ['Cursor AI Pro','কোড লেখা, ডিবাগ আর সফটওয়্যার ডেভেলপমেন্ট দ্রুত করার AI কোড এডিটর',['AI কোড কমপ্লিশন ও জেনারেশন','কোডবেস বোঝায় সহায়তা','AI চ্যাটে কোড নিয়ে প্রশ্ন','ডিবাগিং সহায়তা'],'AI মডেল ও ব্যবহারসীমা Cursor-এর বর্তমান প্ল্যান অনুযায়ী।',['CursorAI','CursorAIPro','AICodeEditor','AICodingAssistant','AIProgramming','DeveloperTools']],
+   ['Grammarly Premium','ইংরেজি লেখার grammar, spelling আর টোন ঠিক করার AI রাইটিং অ্যাসিস্ট্যান্ট',['Grammar ও spelling চেক','লেখা স্পষ্ট ও সংক্ষিপ্ত করা','টোন সাজেশন','ইমেইল ও রিপোর্টে পেশাদার লেখা'],'AI ফিচার ও সীমা বর্তমান প্ল্যান অনুযায়ী।',['Grammarly','GrammarlyPremium','GrammarChecker','AIWritingAssistant','EnglishWriting','WritingTools']],
+   ['Paperpal Premium','গবেষণাপত্র, থিসিস আর জার্নাল আর্টিকেলের ভাষা ঠিক করার AI অ্যাকাডেমিক রাইটিং অ্যাসিস্ট্যান্ট',['একাডেমিক grammar চেক','লেখা স্পষ্ট ও সাবলীল করা','একাডেমিক শব্দচয়নে পরামর্শ','জার্নালে জমার আগে ভাষা যাচাই'],'AI-তৈরি লেখা যাচাই করে ব্যবহার করুন, প্রতিষ্ঠানের নীতিমালা মানুন।',['Paperpal','PaperpalPremium','AcademicWriting','ResearchPaperWriting','ThesisWriting','AcademicEditing']],
+   ['Google Gemini Pro','লেখা, গবেষণা, কোডিং আর ডকুমেন্ট বিশ্লেষণে Google-এর AI সাবস্ক্রিপশন',['জটিল প্রশ্নে বিশ্লেষণ','লেখা ও কোডিং','উপলভ্য টুলে AI ছবি তৈরি','যোগ্য প্ল্যানে Gmail ও Docs-এ Gemini'],'সুবিধা প্ল্যান ও অঞ্চলের ওপর নির্ভর করে, Google-এর প্ল্যান বদলাতে পারে।',['GeminiPro','GoogleGemini','GoogleAI','AIWriting','AIProductivity','AItools']],
+   ['ElevenLabs Creator','স্বাভাবিক কণ্ঠে Text-to-Speech, voiceover আর AI ডাবিংয়ের সাবস্ক্রিপশন',['টেক্সট থেকে বাস্তবসম্মত কণ্ঠ','নিজের কণ্ঠের ক্লোন (যাচাই ও শর্ত সাপেক্ষে)','সমর্থিত ভাষায় AI ভয়েস','সমর্থিত ভাষায় ভিডিও ডাবিং'],'ফিচার ও সুবিধা প্ল্যান ও শর্ত অনুযায়ী বদলাতে পারে।',['ElevenLabs','ElevenLabsCreator','AIVoiceGenerator','TextToSpeech','VoiceoverAI','AIDubbing']]
+  ];
+
+  // ---------- per-product look: [main, second, light-bg, ink, dark?] (brand-inspired colours, no logos drawn) ----------
+  var THEME={
+   'Claude Pro':['#D97757','#B5532F','#F6F0E8','#2B1D15',0],
+   'Adobe Creative Cloud':['#E8281C','#9E1A12','#FFF0EE','#2A0C09',0],
+   'Microsoft 365':['#D83B01','#0F6CBD','#F2F6FC','#14213D',0],
+   'LinkedIn Premium':['#0A66C2','#004182','#EDF4FC','#0B2545',0],
+   'Coursera Plus':['#0056D2','#00419E','#EBF2FF','#0A2150',0],
+   'Google One':['#1A73E8','#34A853','#F0F5FE','#12233F',0],
+   'Duolingo Super':['#4DB800','#1CB0F6','#F1FBE6','#1E3A08',0],
+   'QuillBot Premium':['#3E9B4F','#2A7A3B','#EDF8EF','#12351A',0],
+   'Spotify Premium':['#1DB954','#127A38','#0E1512','#FFFFFF',1],
+   'Gamma Pro':['#7C3AED','#E879F9','#F5F0FF','#1E1038',0],
+   'Figma Pro':['#A259FF','#F24E1E','#F6F1FF','#1E1E1E',0],
+   'Turnitin Instructor':['#0A6EBD','#E4572E','#EDF5FC','#0B2540',0],
+   'Zoom Pro':['#0B5CFF','#0A3FBF','#EAF2FF','#0A1F52',0],
+   'Netflix Premium':['#E50914','#B20710','#141414','#FFFFFF',1],
+   'Amazon Prime Video':['#00A8E1','#1A98FF','#0F171E','#FFFFFF',1],
+   'StealthWriter':['#0891B2','#0E5A73','#EAF8FB','#0B2F3B',0],
+   'HeyGen':['#5B4BFF','#8F7BFF','#F1EFFF','#1A1450',0],
+   'Higgsfield Pro':['#C6F432','#7FA800','#0B0B0B','#FFFFFF',1],
+   'Udemy Business':['#A435F0','#5624D0','#F6EEFE','#1C0A33',0],
+   'Google Meet':['#00897B','#1A73E8','#EAF7F5','#0B2E2A',0],
+   'Windows License Key':['#2D9BFF','#0067C0','#0A1F44','#FFFFFF',1],
+   'Freepik Premium':['#1273EB','#0B4FAE','#EDF4FF','#0B2447',0],
+   'Envato Elements':['#81B441','#4F7A1F','#F3F8EA','#1F2E0C',0],
+   'CapCut Pro':['#25F4EE','#FE2C55','#0B0B0F','#FFFFFF',1],
+   'YouTube Premium':['#FF0000','#B80000','#FFF2F2','#150909',0],
+   'Lovable Pro':['#F43F5E','#6366F1','#FFF1F4','#2A0D17',0],
+   'NordVPN':['#4687FF','#6EE7FF','#0D1B3D','#FFFFFF',1],
+   'ExpressVPN':['#DA3940','#8E1F25','#1B0D10','#FFFFFF',1],
+   'Cursor AI Pro':['#6EA8FE','#A78BFA','#0E0E11','#FFFFFF',1],
+   'Grammarly Premium':['#15C39A','#0E8F73','#E9FBF6','#0B3B2E',0],
+   'Paperpal Premium':['#3F5BF5','#2B3FB8','#EEF1FF','#101A52',0],
+   'Google Gemini Pro':['#4285F4','#A142F4','#F0F4FF','#14213D',0],
+   'ElevenLabs Creator':['#7C6CFF','#2B2B35','#F4F4F7','#16161D',0]
+  };
+  var THEME_FALLBACK=['#0C7A63','#075B49','#EEF5F2','#13201B',0];
+  var AUD={
+   'Claude Pro':['স্টুডেন্ট ও গবেষক','ফ্রিল্যান্সার ও কনটেন্ট রাইটার','ডেভেলপার ও প্রোগ্রামার','ব্যবসায়ী ও অফিসের কাজে ব্যস্ত যারা'],
+   'Adobe Creative Cloud':['গ্রাফিক ডিজাইনার','ভিডিও এডিটর','ফটোগ্রাফার','ফ্রিল্যান্সার ও এজেন্সি'],
+   'Microsoft 365':['স্টুডেন্ট ও শিক্ষক','অফিস ও ব্যাংকের কর্মী','ফ্রিল্যান্সার','ছোট ব্যবসার মালিক'],
+   'LinkedIn Premium':['চাকরিপ্রার্থী','রিক্রুটার ও HR','ফ্রিল্যান্সার ও কনসালট্যান্ট','ব্যবসায়ী ও সেলস প্রফেশনাল'],
+   'Coursera Plus':['স্টুডেন্ট','চাকরিপ্রার্থী','স্কিল বাড়াতে চান এমন প্রফেশনাল','ক্যারিয়ার বদলাতে চান যারা'],
+   'Google One':['ফোনের স্টোরেজ ভরে যায় যাদের','ফটো ও ভিডিও ব্যাকআপ রাখতে চান যারা','Gmail ও Drive বেশি ব্যবহার করেন যারা','ফাইল শেয়ার করে কাজ করেন যারা'],
+   'Duolingo Super':['ইংরেজি শিখতে চান যারা','বিদেশে পড়াশোনা বা চাকরির প্রস্তুতি নিচ্ছেন যারা','নতুন ভাষা শিখতে আগ্রহী যারা','স্টুডেন্ট'],
+   'QuillBot Premium':['স্টুডেন্ট','ব্লগার ও কনটেন্ট রাইটার','গবেষক','ফ্রিল্যান্সার'],
+   'Spotify Premium':['গানপ্রেমী','পড়াশোনা বা কাজের সময় গান শোনেন যারা','ভ্রমণে অফলাইনে গান শুনতে চান যারা','নিজের প্লেলিস্ট সাজাতে ভালোবাসেন যারা'],
+   'Gamma Pro':['স্টুডেন্ট','ফ্রিল্যান্সার ও কনটেন্ট ক্রিয়েটর','ব্যবসার মালিক','অফিসে প্রেজেন্টেশন দিতে হয় যাদের'],
+   'Figma Pro':['UI/UX ডিজাইনার','ওয়েব ও অ্যাপ ডিজাইনার','ফ্রিল্যান্সার ও স্টুডেন্ট','ডিজাইন এজেন্সি ও স্টার্টআপ'],
+   'Turnitin Instructor':['শিক্ষক ও অধ্যাপক','শিক্ষাপ্রতিষ্ঠান','গবেষণা তত্ত্বাবধায়ক','লেখার মিল যাচাই করেন যারা'],
+   'Zoom Pro':['অনলাইন ক্লাস নেন যারা','ফ্রিল্যান্সার ও রিমোট টিম','ব্যবসায়িক মিটিং করেন যারা','কোচিং ও ট্রেনার'],
+   'Netflix Premium':['সিনেমা ও সিরিজপ্রেমী','পরিবার নিয়ে দেখতে চান যারা','ডকুমেন্টারি ভালোবাসেন যারা','অবসরে বিনোদন খোঁজেন যারা'],
+   'Amazon Prime Video':['সিনেমা ও সিরিজপ্রেমী','পরিবার নিয়ে দেখতে চান যারা','Originals-এর ভক্ত যারা','অবসরে বিনোদন খোঁজেন যারা'],
+   'StealthWriter':['ব্লগার ও কনটেন্ট রাইটার','ফ্রিল্যান্সার','মার্কেটার','লেখা আরও সাবলীল করতে চান যারা'],
+   'HeyGen':['কনটেন্ট ক্রিয়েটর','মার্কেটার ও ব্যবসার মালিক','অনলাইন কোর্স নির্মাতা','ক্যামেরার ঝামেলা ছাড়া ভিডিও বানাতে চান যারা'],
+   'Higgsfield Pro':['ভিডিও ক্রিয়েটর','মার্কেটার','সোশ্যাল মিডিয়া ম্যানেজার','AI ভিডিও নিয়ে পরীক্ষা করতে চান যারা'],
+   'Udemy Business':['প্রফেশনাল','টিম ও প্রতিষ্ঠান','চাকরিপ্রার্থী','স্কিল বাড়াতে চান যারা'],
+   'Google Meet':['অনলাইন ক্লাস করেন যারা','অফিস মিটিং করেন যারা','রিমোট টিম','শিক্ষক ও কোচিং'],
+   'Windows License Key':['নতুন পিসি বা ল্যাপটপ সেটআপ করছেন যারা','Windows অ্যাক্টিভেট করতে চান যারা','অফিস বা সার্ভিস সেন্টারের কাজে','ডিভাইসের সংস্করণ মিলিয়ে নিতে চান যারা'],
+   'Freepik Premium':['গ্রাফিক ডিজাইনার','সোশ্যাল মিডিয়া ম্যানেজার','মার্কেটার','কনটেন্ট ক্রিয়েটর'],
+   'Envato Elements':['ভিডিও এডিটর','ডিজাইনার','এজেন্সি','ফ্রিল্যান্সার'],
+   'CapCut Pro':['Reels ও Shorts ক্রিয়েটর','ইউটিউবার','সোশ্যাল মিডিয়া ম্যানেজার','ভিডিও এডিটিং শিখছেন যারা'],
+   'YouTube Premium':['বিজ্ঞাপন ছাড়া দেখতে চান যারা','ব্যাকগ্রাউন্ডে ভিডিও বা গান চালাতে চান যারা','অফলাইনে ভিডিও দেখতে চান যারা','নিয়মিত YouTube দেখেন যারা'],
+   'Lovable Pro':['স্টার্টআপ ফাউন্ডার','ফ্রিল্যান্সার','কোড না জানা ব্যবসায়ী','দ্রুত প্রোটোটাইপ বানাতে চান যারা'],
+   'NordVPN':['পাবলিক Wi-Fi ব্যবহার করেন যারা','অনলাইনে বাড়তি গোপনীয়তা চান যারা','ফ্রিল্যান্সার ও রিমোট ওয়ার্কার','বিভিন্ন দেশের সার্ভারে সংযোগ চান যারা'],
+   'ExpressVPN':['পাবলিক Wi-Fi ব্যবহার করেন যারা','অনলাইনে বাড়তি গোপনীয়তা চান যারা','ফ্রিল্যান্সার ও রিমোট ওয়ার্কার','দ্রুত সংযোগ চান যারা'],
+   'Cursor AI Pro':['ডেভেলপার','প্রোগ্রামিং শিখছেন যারা','ফ্রিল্যান্স প্রোগ্রামার','স্টার্টআপ টিম'],
+   'Grammarly Premium':['স্টুডেন্ট','অফিস কর্মী','ফ্রিল্যান্সার','ইংরেজি লেখা ঠিক করতে চান যারা'],
+   'Paperpal Premium':['গবেষক','থিসিস লিখছেন যারা','মাস্টার্স ও পিএইচডি স্টুডেন্ট','জার্নালে পেপার জমা দেবেন যারা'],
+   'Google Gemini Pro':['স্টুডেন্ট','কনটেন্ট রাইটার','ডেভেলপার','গবেষণা ও অফিসের কাজ করেন যারা'],
+   'ElevenLabs Creator':['YouTuber','ভিডিও ক্রিয়েটর','অডিওবুক ও পডকাস্ট নির্মাতা','মার্কেটার']
+  };
+  var AUD_FALLBACK=['স্টুডেন্ট','ফ্রিল্যান্সার','প্রফেশনাল','ব্যবসার মালিক'];
+  // শুধু ব্যবহারকারীর নিজের দেওয়া Netflix নমুনা ক্যাপশন থেকে নেওয়া অতিরিক্ত সুবিধা
+  var XTRA={'Netflix Premium':['4K UHD প্রিমিয়াম অ্যাকাউন্ট','গ্লোবাল Access','VPN ছাড়া ব্যবহার, পিন সিকিউর','Renewable অ্যাকাউন্ট']};
+  var WHY=['Genuine Subscription','দ্রুত অ্যাক্টিভেশন','অর্ডারের পরেও সাপোর্ট','পরিষ্কার Terms & Conditions','বাংলাদেশি ইউজারদের জন্য সহজ Payment Process','সমস্যা হলে Customer Support'];
+  var PH=['প্রিমিয়াম সাবস্ক্রিপশন','এখনই অর্ডার করুন','কাজ হবে আরও সহজ','সহজ অর্ডার, দ্রুত সাপোর্ট','আপনার কাজের সঙ্গী','স্মার্টভাবে শুরু করুন','Genuine Subscription','বাংলাদেশে সহজে পাবেন','সময় বাঁচান, কাজ গুছান','আজই ইনবক্স করুন','ভরসার সাথে নিন','আরও ভালো কাজের জন্য'];
+  var LAST=['সহজ অর্ডার, দ্রুত সাপোর্ট','Genuine সাবস্ক্রিপশন, পরিষ্কার শর্ত','সমস্যা হলে Customer Support','বাংলাদেশি ইউজারদের জন্য সহজ Payment'];
+  var ANGLE=['তথ্যভিত্তিক','ঝাঁঝালো সরাসরি','প্রশ্ন ও গল্প','ফিচার ও কিওয়ার্ড'];
+  var STYLE_NAMES=ANGLE;
+
+  // ---------- captions: 4 styles x 5 variants = 20, rotating by day ----------
+  function contact(){
+    var l=[];
+    if(S.website.trim())l.push('🌐 '+S.website.trim().replace(/^https?:\/\//,''));
+    if(S.page.trim())l.push('✅ Facebook Page: '+S.page.trim());
+    if(S.wa.trim())l.push('📥 Verified WhatsApp: '+S.wa.trim());
+    if(S.walink.trim())l.push('💬 Direct Chat: '+S.walink.trim());
+    return l.join('\n');
+  }
+  function bl(list,m){return list.map(function(x){return m+' '+x})}
+  function rotate(arr,s){var n=arr.length,o=[];for(var i=0;i<n;i++)o.push(arr[(i+s)%n]);return o}
+  var ORDER=['যেকোনো ডিজিটাল প্রোডাক্ট সম্পর্কে বিস্তারিত জানতে এবং অর্ডার করতে এখনই আমাদের সাথে যোগাযোগ করুন 📩',
+    'প্যাকেজ, শর্ত আর অর্ডারের নিয়ম জানতে ইনবক্সে বা WhatsApp-এ মেসেজ দিন 📩',
+    'অর্ডার করতে চাইলে প্রোডাক্টের নাম লিখে মেসেজ দিন, বাকিটা আমরা বুঝিয়ে দেব 📩',
+    'কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন, আমরা সহজ করে বুঝিয়ে দেব 📩',
+    'আরও জানতে বা অর্ডার করতে নিচের যেকোনো মাধ্যমে যোগাযোগ করুন 👇'];
+  var TA=function(c){return [
+    '🚀 '+c.n+' Subscription Bangladesh | আজই শুরু করুন',
+    '🎯 '+c.n+' খুঁজছেন? সহজ সমাধান এখানেই',
+    '✨ '+c.n+' — কাজকে করুন আরও স্মার্ট',
+    '📌 '+c.n+' Subscription নিতে চান? জেনে নিন সব তথ্য',
+    '🔥 '+c.n+' Bangladesh: এক নজরে সব সুবিধা']};
+  var IA=function(c){return [
+    [c.n+' হলো '+c.line+'।','কাজের গতি বাড়াতে আর ঝামেলা কমাতে এটি অনেকেরই পছন্দের একটি টুল।'],
+    ['ঘণ্টার পর ঘণ্টা সময় নষ্ট না করে কাজ সহজ করতে চান?',c.n+' হলো '+c.line+'।'],
+    ['বাংলাদেশ থেকে '+c.n+' সাবস্ক্রিপশন নিতে চান? তাহলে এই পোস্টটা আপনার জন্য।',c.n+' হলো '+c.line+'।'],
+    ['আজকের প্রোডাক্ট '+c.n+'।',c.line+'।','কাজ সহজ আর গোছানো রাখতে চাইলে এটি দেখে নিতে পারেন।'],
+    [c.n+' দিয়ে আপনার কাজ হোক আরও দ্রুত আর গোছানো।',c.n+' হলো '+c.line+'।']]};
+  function styleA(v,c){
+    var feat=['✨ '+c.n+'-এ কী কী পাবেন?','✨ '+c.n+' দিয়ে কী কী করা যায়?','✨ '+c.n+'-এর সুবিধাগুলো:','✨ এক নজরে '+c.n+':','✨ কী কী সুবিধা থাকছে?'][v];
+    var aud=['👨‍💻 কার জন্য '+c.n+'?','👥 কাদের কাজে লাগবে?','🎯 যাঁদের জন্য এটা দারুণ:','👤 কারা ব্যবহার করতে পারেন?','🙋 আপনি কি এঁদের একজন?'][v];
+    var why=['🛡️ কেন '+c.brand+'-এ নেবেন?','🛡️ আমাদের সাথে থাকলে যা পাবেন:','✅ কেন আমাদের ওপর ভরসা করবেন?','🤝 '+c.brand+'-এর সার্ভিস:','🔒 আপনার জন্য আমাদের ব্যবস্থা:'][v];
+    var mk=['✅','✔️','🔹','👉','✅'][v];
+    var F=[feat].concat(bl(c.feats.concat(c.xtra),mk)),A=[aud].concat(bl(c.aud,'•')),W=[why].concat(bl(c.why,'✅'));
+    var order=[[F,A,W],[A,F,W],[F,W,A],[F,A,W],[W,F,A]][v];
+    var L=[TA(c)[v],''].concat(IA(c)[v],['']);
+    order.forEach(function(s){L=L.concat(s,[''])});
+    L.push(ORDER[v],'',c.contact,'',c.kw);
+    return L;
+  }
+  function styleB(v,c){
+    var title=[c.n.toUpperCase()+' Subscription Available!!! 🤫','🔥 '+c.n+' নিতে চান? আজই ইনবক্স করুন!','⚡ '+c.n+' Subscription আছে, দেরি করলে মিস!','📢 '+c.n+' লাগবে? এখনই মেসেজ দিন!','💥 '+c.n+' Subscription Ready!!!'][v];
+    var tag=['🛡️ ঝামেলা ছাড়া অর্ডার, পরিষ্কার শর্ত আর অর্ডারের পরেও সাপোর্ট, সব এক জায়গায়।','🛡️ প্যাকেজ বেছে নিন আপনার প্রয়োজন অনুযায়ী, বাকিটা আমরা দেখছি।','🛡️ অর্ডার এখন আরও সহজ: প্যাকেজ জেনে নিন, কনফার্ম করুন, শুরু করুন।','🛡️ আপনার পছন্দের প্যাকেজটি বেছে নিন, সহজ প্রক্রিয়ায় সাবস্ক্রিপশন বুঝে নিন।','🛡️ সাবস্ক্রিপশনে ঝামেলা চান না? তাহলে সোজা আমাদের সাথে যোগাযোগ করুন।'][v];
+    var fh=['যে যে সুবিধা পাচ্ছেন-','কী কী পাচ্ছেন 👇','সুবিধাগুলো দেখে নিন 👇','এক নজরে সুবিধা-','এতে যা যা থাকছে-'][v];
+    var wh=['🛡️ কেন আমাদের থেকে নেবেন?','🛡️ আমাদের সার্ভিসে যা থাকছে:','🛡️ আমাদের সাথে নিশ্চিন্ত থাকুন:','🛡️ ভরসার কারণ:','🛡️ সার্ভিসের দিক থেকে:'][v];
+    var warn=['⚠️ অর্ডারের আগে প্যাকেজ আর শর্ত ইনবক্সে জেনে নিন, কোনো প্রশ্ন থাকলে সরাসরি জিজ্ঞেস করুন।','⚠️ কোন প্ল্যানে কী সুবিধা মিলবে, তা অর্ডারের আগেই ইনবক্সে জেনে নিন।','⚠️ ডিভাইস বা অ্যাকাউন্টের ধরন নিয়ে প্রশ্ন থাকলে অর্ডারের আগেই জিজ্ঞেস করুন।','⚠️ সুবিধা আর ব্যবহারসীমা প্ল্যান অনুযায়ী আলাদা হতে পারে, তাই অর্ডারের আগে জেনে নিন।','⚠️ কিছু বুঝতে অসুবিধা হলে কমেন্টে বা ইনবক্সে জিজ্ঞেস করুন, সহজ করে বুঝিয়ে দেব।'][v];
+    var cta=['তাই বসে না থেকে এখনই অর্ডার করুন 👇','দেরি না করে এখনই ইনবক্স করুন 👇','অর্ডার দিতে এখনই মেসেজ করুন 👇','আজই শুরু করতে চাইলে নিচের মাধ্যমে যোগাযোগ করুন 👇','সিদ্ধান্ত নিয়ে ফেলুন, তারপর মেসেজ দিন 👇'][v];
+    var L=[title,'',tag,c.n+' হলো '+c.line+'।','',fh].concat(bl(c.feats.concat(c.xtra),'✔'),['','👥 যাঁদের জন্য: '+c.aud.slice(0,3).join(' · '),'',wh],bl(c.why,'✅'),['',warn,'',cta,'',c.contact]);
+    return L;
+  }
+  function styleC(v,c){
+    var open=[c.n+' নিয়ে ভাবছেন, কিন্তু কোথা থেকে নেবেন বুঝতে পারছেন না? 🤔','কাজের চাপে সময় বের করা কঠিন, তাই না? তখন '+c.n+'-এর মতো টুল অনেক ঝামেলা কমিয়ে দেয়। 💡','একটা প্রশ্ন: '+c.n+' কি আপনার কাজে লাগবে? 🤔 চলুন দেখি এটা দিয়ে কী কী করা যায়।','বন্ধুরা অনেকেই জানতে চান: "'+c.n+' কীভাবে নেব?" আজ সবার জন্য একটা পোস্ট 👇','নতুন কিছু শিখতে বা কাজ গুছাতে চান? আজকের প্রোডাক্ট '+c.n+' ✨'][v];
+    var f=c.feats;
+    var mid=[
+      [c.n+' হলো '+c.line+'।','যেমন, '+f[0]+' আর '+f[1]+', এই কাজগুলো এখানে সহজেই করা যায়।'],
+      [c.n+' হলো '+c.line+'।','প্রতিদিনের কাজে '+f[0]+' বা '+f[1]+' লাগলে এটা বেশ কাজে আসে।'],
+      [c.n+' হলো '+c.line+'।','আপনার কাজের সাথে কোন সুবিধাটা মেলে, নিচে দেখে নিন।'],
+      [c.n+' হলো '+c.line+'।','এতে '+f[0]+' করতে পারবেন, আবার '+f[3]+' ও আছে।'],
+      [c.n+' হলো '+c.line+'।','কাজ শুরু করতে পারবেন '+f[0]+' দিয়ে, তারপর বাকিগুলো কাজে লাগিয়ে।']][v];
+    var bh=['✨ মূল সুবিধাগুলো:','✨ যা যা পাবেন:','✨ এক নজরে সুবিধা:','✨ কী কী আছে?','✨ ভেতরে যা আছে:'][v];
+    var mk=['📌','✅','🔹','👉','✔️'][v];
+    var who='👥 কার কাজে লাগবে? '+c.aud.join(', ')+'।';
+    var wh=['🛡️ আমাদের থেকে নিলে:','🛡️ আমাদের সাথে থাকলে:','🛡️ সার্ভিসের দিক থেকে:','🛡️ আপনি পাবেন:','🛡️ আমাদের পক্ষ থেকে:'][v];
+    var q=['আপনার কোনো প্রশ্ন থাকলে কমেন্টে জানান বা ইনবক্সে মেসেজ দিন 👇','কমেন্টে বলুন, আপনি এটা কোন কাজে ব্যবহার করতে চান? তারপর ইনবক্সে কথা হবে 👇','আরও জানতে চাইলে "বলুন" লিখে কমেন্ট করুন, অথবা সরাসরি মেসেজ দিন 👇','বন্ধুকে ট্যাগ করুন, যার এটা কাজে লাগতে পারে 🔖 আর বিস্তারিত জানতে মেসেজ দিন 👇','এই পোস্টটা সেভ করে রাখুন, দরকারের সময় কাজে লাগবে 🔖 অর্ডার বা প্রশ্নে যোগাযোগ করুন 👇'][v];
+    var L=[open,''].concat(mid,['',bh],bl(c.feats.concat(c.xtra),mk),['',who,'',wh],bl(c.why.slice(0,4),'✅'),['',q,'',c.contact]);
+    return L;
+  }
+  function styleD(v,c){
+    var title=['🚀 '+c.n+' Subscription Bangladesh','📌 '+c.n+' Bangladesh | Subscription Available','💼 '+c.n+' Premium Subscription BD','🌟 '+c.n+' Account Bangladesh | '+c.brand,'🔔 '+c.n+' নিন সহজে | '+c.brand][v];
+    var para=[['আপনি কি '+c.n+' ব্যবহার করতে চান?',c.n+' হলো '+c.line+'।','বাংলাদেশ থেকে সহজে সাবস্ক্রিপশন নিতে চাইলে '+c.brand+' আছে আপনার পাশে।'],
+      [c.n+' ব্যবহার করতে চান, কিন্তু কীভাবে নেবেন বুঝতে পারছেন না?',c.n+' হলো '+c.line+'।','সহজ প্রক্রিয়ায় সাবস্ক্রিপশন নিতে '+c.brand+'-এর সাথে যোগাযোগ করতে পারেন।'],
+      ['কাজের মান আর গতি বাড়াতে '+c.n+' এখন অনেকেরই পছন্দ।',c.n+' হলো '+c.line+'।','বাংলাদেশি ইউজারদের জন্য সাবস্ক্রিপশন নেওয়ার ব্যবস্থা আছে আমাদের কাছে।'],
+      [c.n+' Subscription খুঁজছেন? এখানে পাবেন বিস্তারিত তথ্য আর সহজ অর্ডারের সুযোগ।',c.n+' হলো '+c.line+'।'],
+      ['একটা ভালো টুল কাজকে অনেক সহজ করে দেয়। আজকের টুল: '+c.n+'।',c.line+'।','অর্ডারের আগে সব জেনে নিতে ইনবক্সে আসুন।']][v];
+    var fh=['✨ '+c.n+' দিয়ে কী কী করা যায়?','✨ '+c.n+'-এ যা যা থাকছে:','✨ '+c.n+'-এর প্রধান সুবিধা:','✨ '+c.n+' কী কাজে লাগে?','✨ এক নজরে '+c.n+':'][v];
+    var mk=['✅','✔️','🔸','👉','✅'][v];
+    var wh=['🛡️ আমাদের সার্ভিসে:','🛡️ '+c.brand+'-এ যা থাকছে:','🛡️ কেন আমাদের সাথে?','🛡️ সার্ভিসের দিক থেকে:','🛡️ আপনার জন্য:'][v];
+    var L=[title,''].concat(para,['',fh],bl(c.feats.concat(c.xtra),mk),['','🎓 '+c.aud.join(' | ')+' — সবার জন্যই '+c.n+' একটি কাজের টুল।','','🔥 '+c.n+' Subscription Bangladesh','আপনি যদি '+c.kws[0]+', '+c.kws[1]+' অথবা '+c.kws[2]+' খুঁজে থাকেন, তাহলে '+c.brand+'-এর সাথে যোগাযোগ করতে পারেন।','',wh],bl(c.why.slice(0,4),'✅'),['',ORDER[v],'',c.contact,'',c.kw]);
+    return L;
+  }
+  var STYLES=[styleA,styleB,styleC,styleD];
+  function makeKw(c,v){
+    var n=c.n,all=[n+' Subscription Bangladesh',n+' Bangladesh',n+' Subscription BD',n+' Premium Bangladesh',n+' Account',n+' Subscription',n+' BD'];
+    var r=rotate(all,v*2%all.length);
+    return {kws:r,kw:r.slice(0,6).join(' | ')+' | '+c.brand};
+  }
+  function caption(style,v,c){
+    var L=STYLES[style](v,c);
+    L.push('','ℹ️ '+c.caveat,'',c.tags);
+    var out=[],blank=true;
+    L.forEach(function(x){
+      if(x===''){if(!blank){out.push('');blank=true}}
+      else{out.push(x);blank=false}
+    });
+    while(out.length&&out[out.length-1]==='')out.pop();
+    return out.join('\n');
+  }
+
+  // ---------- icons (24x24 line icons, drawn with Path2D) ----------
+  var ICONS={
+   check:['M5 12.5l4.5 4.5L19 7.5'],
+   play:['F:M8 5v14l11-7z'],
+   download:['M12 4v11','M7 11l5 5 5-5','M5 20h14'],
+   cloud:['M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 9.2 4.4 4.4 0 0 1 17.5 18z'],
+   shield:['M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z','M9 12l2 2 4-4'],
+   bolt:['F:M13 2L5 14h6l-1 8 8-12h-6z'],
+   users:['M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z','M3 19c0-3 3-5 6-5s6 2 6 5','M16 5.5a3 3 0 0 1 0 5.5','M18 14c2 .7 3 2.3 3 5'],
+   doc:['M7 3h7l5 5v13H7z','M14 3v5h5','M10 13h6','M10 17h6'],
+   code:['M9 8l-5 4 5 4','M15 8l5 4-5 4','M13.5 6l-3 12'],
+   music:['M9 18V6l10-2v12','M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z','M19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z'],
+   pen:['M4 20l4-1L19 8l-3-3L5 16z','M14 7l3 3'],
+   chart:['M5 20V10','M12 20V4','M19 20v-8'],
+   globe:['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z','M3 12h18','M12 3c3 3 3 15 0 18','M12 3c-3 3-3 15 0 18'],
+   star:['M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'],
+   video:['M3 7h12v10H3z','M15 11l6-3v8l-6-3'],
+   mic:['M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z','M5 11a7 7 0 0 0 14 0','M12 18v3'],
+   image:['M4 5h16v14H4z','M4 16l5-5 4 4 3-3 4 4','F:M9 9.5a1.2 1.2 0 1 0 0-.01z'],
+   lock:['M6 11h12v10H6z','M8 11V8a4 4 0 0 1 8 0v3'],
+   calendar:['M4 6h16v14H4z','M4 10h16','M8 3v4','M16 3v4'],
+   screen:['M3 5h18v11H3z','M8 20h8','M12 16v4'],
+   sparkle:['M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z','M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z'],
+   noad:['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z','M5.6 5.6l12.8 12.8'],
+   book:['M4 5h7a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z','M20 5h-7a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h7z'],
+   search:['M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z','M16 16l5 5'],
+   phone:['M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'],
+   headset:['M4 14v-2a8 8 0 0 1 16 0v2','M4 14h3v5H4z','M17 14h3v5h-3z','M20 19a3 3 0 0 1-3 3h-3']
+  };
+  var ICON_RULES=[
+   [/বিজ্ঞাপন/,'noad'],[/ডাউনলোড|অফলাইন/,'download'],[/ক্লাউড|স্টোরেজ|ব্যাকআপ|onedrive|drive/i,'cloud'],
+   [/কণ্ঠ|ভয়েস|voice|ডাবিং/i,'mic'],[/কোড|ডিবাগ|কোডবেস/,'code'],[/গান|প্লেলিস্ট|music/i,'music'],
+   [/মিটিং|ভিডিও কল/,'screen'],[/স্ক্রিন শেয়ার/,'screen'],
+   [/ভিডিও|সিনেমা|সিরিজ|originals|ইফেক্ট/i,'video'],
+   [/নিরাপত্তা|এনক্রিপ্ট|আইপি|IP |গোপনীয়|wi-fi/i,'shield'],
+   [/টিম|একসঙ্গে|নেটওয়ার্ক|inmail|শেয়ার/i,'users'],
+   [/ক্যালেন্ডার|শিডিউল/,'calendar'],
+   [/অ্যাক্টিভেট|লাইসেন্স|অ্যাক্টিভেশন/,'lock'],
+   [/কোর্স|শেখা|সার্টিফিকেট|লেসন|প্র্যাকটিস/,'book'],
+   [/ডিজাইন|ইন্টারফেস|টেমপ্লেট|লেআউট|ফটো|ছবি|ইমেজ|ইলাস্ট্রেশন|ভেক্টর|illustrator|photoshop|ব্যাকগ্রাউন্ড রিমুভ/i,'image'],
+   [/রিপোর্ট|similarity|ডকুমেন্ট|ফাইল/i,'doc'],
+   [/লেখা|grammar|paraphras|রাইটিং|আর্টিকেল|ইমেইল|summar|অনুবাদ|ভাষা|spelling|টোন/i,'pen'],
+   [/বিশ্লেষণ|ইনসাইট|তথ্য|অগ্রগতি|সার্চ/i,'chart'],
+   [/ai|এআই|জেনারেশন|স্বয়ংক্রিয়|অ্যাভাটার/i,'sparkle'],
+   [/দ্রুত/,'bolt']
+  ];
+  function pickIcons(feats){
+    var fall=['star','check','bolt','sparkle'],used={};
+    return feats.map(function(f,i){
+      var pick=null;
+      for(var r=0;r<ICON_RULES.length;r++){if(ICON_RULES[r][0].test(f)&&!used[ICON_RULES[r][1]]){pick=ICON_RULES[r][1];break}}
+      if(!pick){for(var j=0;j<fall.length;j++){if(!used[fall[(i+j)%4]]){pick=fall[(i+j)%4];break}}}
+      used[pick||'star']=1;return pick||'star';
+    });
+  }
+  function drawIcon(c,name,cx,cy,s,col,lw){
+    var def=ICONS[name]||ICONS.star;
+    c.save();c.translate(cx-s/2,cy-s/2);c.scale(s/24,s/24);
+    c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw||2;c.lineCap='round';c.lineJoin='round';
+    def.forEach(function(p){
+      if(p.charAt(0)==='F'&&p.charAt(1)===':')c.fill(new Path2D(p.slice(2)));
+      else c.stroke(new Path2D(p));
+    });
+    c.restore();
+  }
+
+  // ---------- colour helpers ----------
+  function rgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+  function rgba(h,a){var q=rgb(h);return 'rgba('+q[0]+','+q[1]+','+q[2]+','+a+')'}
+  function lum(h){var q=rgb(h).map(function(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)});return 0.2126*q[0]+0.7152*q[1]+0.0722*q[2]}
+  function onColor(h){return lum(h)>0.32?'#10151A':'#FFFFFF'}
+
+  // ---------- logo cache ----------
+  var LOGO_IMG={};
+  function logoImg(name){var im=LOGO_IMG[name];return im&&im.complete&&im.naturalWidth?im:null}
+  function loadLogo(name){
+    return new Promise(function(res){
+      if(!LOGOS[name]){delete LOGO_IMG[name];return res()}
+      var im=new Image();im.onload=function(){LOGO_IMG[name]=im;res()};im.onerror=function(){res()};im.src=LOGOS[name];
+    });
+  }
+
+  // ---------- poster ----------
+  function wrap(c,text,maxW){
+    var words=String(text).split(/\s+/),lines=[],cur='';
+    words.forEach(function(w){
+      var t=cur?cur+' '+w:w;
+      if(c.measureText(t).width<=maxW){cur=t}
+      else{
+        if(cur)lines.push(cur);
+        if(c.measureText(w).width>maxW){
+          var chunk='';
+          Array.from(w).forEach(function(ch){if(c.measureText(chunk+ch).width>maxW){lines.push(chunk);chunk=ch}else chunk+=ch});
+          cur=chunk;
+        }else cur=w;
+      }
+    });
+    if(cur)lines.push(cur);
+    return lines;
+  }
+  function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+  function circ(c,x,y,r,col,a){c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=a==null?col:rgba(col,a);c.fill()}
+  function lg(c,x0,y0,x1,y1,a,b){var g=c.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,a);g.addColorStop(1,b);return g}
+  var FD='"Anek Bangla","Hind Siliguri",sans-serif',FB='"Hind Siliguri","Anek Bangla",sans-serif';
+  function shadow(c,col,blur,oy){c.shadowColor=col;c.shadowBlur=blur;c.shadowOffsetY=oy||0}
+  function noShadow(c){c.shadowColor='transparent';c.shadowBlur=0;c.shadowOffsetY=0}
+  function bar(c,x,y,w,col){rr(c,x,y,w,10,5);c.fillStyle=col;c.fill()}
+
+  function phoneMock(c,x,y,w,h,T,icons,name,dark){
+    var c1=T[0],c2=T[1],body=dark?'#05080F':'#0F172A';
+    c.save();shadow(c,'rgba(0,0,0,.30)',34,16);rr(c,x,y,w,h,42);c.fillStyle=body;c.fill();c.restore();
+    var sx=x+9,sy=y+9,sw=w-18,sh=h-18;
+    c.save();rr(c,sx,sy,sw,sh,34);c.clip();
+    c.fillStyle=dark?'#121B2B':'#FFFFFF';c.fillRect(sx,sy,sw,sh);
+    c.fillStyle=lg(c,sx,sy,sx+sw,sy+120,c1,c2);c.fillRect(sx,sy,sw,118);
+    var oc=onColor(c1);c.fillStyle=oc;c.textAlign='left';c.textBaseline='alphabetic';
+    c.font='600 17px '+FB;c.fillText('9:41',sx+22,sy+36);
+    c.font='800 27px '+FD;
+    var nm=name,mw=sw-44;while(c.measureText(nm).width>mw&&nm.length>3)nm=nm.slice(0,-2);
+    if(nm!==name)nm=nm.trim()+'…';
+    c.fillText(nm,sx+22,sy+84);
+    // hero card
+    var hy=sy+136;
+    rr(c,sx+18,hy,sw-36,96,18);c.fillStyle=dark?'rgba(255,255,255,.08)':rgba(c1,.10);c.fill();
+    bar(c,sx+34,hy+22,sw-110,dark?'rgba(255,255,255,.55)':rgba(c1,.55));
+    bar(c,sx+34,hy+46,sw-150,dark?'rgba(255,255,255,.25)':'rgba(0,0,0,.12)');
+    rr(c,sx+34,hy+66,76,18,9);c.fillStyle=c1;c.fill();
+    // rows
+    var ry=hy+114,rowH=Math.max(54,Math.min(74,(sy+sh-ry-60)/3));
+    for(var i=0;i<3;i++){
+      var yy=ry+i*rowH;
+      circ(c,sx+44,yy+rowH/2-4,19,c1,1);
+      drawIcon(c,icons[i]||'star',sx+44,yy+rowH/2-4,22,onColor(c1),2.2);
+      bar(c,sx+76,yy+rowH/2-16,sw-130-i*18,dark?'rgba(255,255,255,.45)':'rgba(0,0,0,.28)');
+      bar(c,sx+76,yy+rowH/2+4,sw-170-i*10,dark?'rgba(255,255,255,.2)':'rgba(0,0,0,.10)');
+    }
+    // bottom nav
+    c.fillStyle=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.05)';c.fillRect(sx,sy+sh-52,sw,52);
+    for(var j=0;j<4;j++)circ(c,sx+sw*(0.2+j*0.2),sy+sh-26,7,j===0?c1:(dark?'rgba(255,255,255,.35)':'rgba(0,0,0,.25)'),1);
+    c.restore();
+    rr(c,x+w/2-36,y+17,72,20,10);c.fillStyle=body;c.fill();
+  }
+  function windowMock(c,x,y,w,h,T,icons,name,dark){
+    var c1=T[0],c2=T[1];
+    c.save();shadow(c,'rgba(0,0,0,.26)',34,16);rr(c,x,y,w,h,22);c.fillStyle=dark?'#121B2B':'#FFFFFF';c.fill();c.restore();
+    c.save();rr(c,x,y,w,h,22);c.clip();
+    c.fillStyle=dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)';c.fillRect(x,y,w,40);
+    circ(c,x+20,y+20,6,'#FF5F57',1);circ(c,x+40,y+20,6,'#FEBC2E',1);circ(c,x+60,y+20,6,'#28C840',1);
+    c.fillStyle=c1;c.fillRect(x,y+40,58,h-40);
+    for(var i=0;i<4;i++){circ(c,x+29,y+84+i*50,13,onColor(c1),.9);}
+    var mx=x+76,mw=w-94;
+    c.textAlign='left';c.textBaseline='alphabetic';
+    c.fillStyle=dark?'#fff':'#12171C';c.font='800 24px '+FD;
+    var nm=name,maxw=mw;while(c.measureText(nm).width>maxw&&nm.length>3)nm=nm.slice(0,-2);
+    if(nm!==name)nm=nm.trim()+'…';
+    c.fillText(nm,mx,y+80);
+    rr(c,mx,y+98,mw,110,16);c.fillStyle=lg(c,mx,y+98,mx+mw,y+208,c1,c2);c.fill();
+    bar(c,mx+16,y+122,mw*0.6,rgba(onColor(c1)==='#FFFFFF'?'#ffffff':'#10151A',.75));
+    bar(c,mx+16,y+146,mw*0.4,rgba(onColor(c1)==='#FFFFFF'?'#ffffff':'#10151A',.4));
+    var gy=y+228,cw=(mw-12)/2,ch=Math.max(70,Math.min(104,(y+h-gy-24)/2));
+    for(var k=0;k<4;k++){
+      var cx=mx+(k%2)*(cw+12),cy=gy+Math.floor(k/2)*(ch+12);
+      rr(c,cx,cy,cw,ch,14);c.fillStyle=dark?'rgba(255,255,255,.08)':rgba(c1,.10);c.fill();
+      circ(c,cx+26,cy+28,16,c1,1);drawIcon(c,icons[k]||'star',cx+26,cy+28,18,onColor(c1),2.2);
+      bar(c,cx+14,cy+ch-28,cw-34,dark?'rgba(255,255,255,.35)':'rgba(0,0,0,.2)');
+    }
+    c.restore();
+  }
+
+  function fitLines(c,text,maxW,sizes,font,weight,maxLines){
+    for(var i=0;i<sizes.length;i++){
+      c.font=weight+' '+sizes[i]+'px '+font;
+      var L=wrap(c,text,maxW);if(L.length<=maxLines)return {fs:sizes[i],lines:L};
+    }
+    var fs=sizes[sizes.length-1];c.font=weight+' '+fs+'px '+font;
+    var L2=wrap(c,text,maxW).slice(0,maxLines);
+    var last=L2[L2.length-1];while(c.measureText(last+'…').width>maxW&&last.length>1)last=last.slice(0,-1);
+    L2[L2.length-1]=last+'…';return {fs:fs,lines:L2};
+  }
+  function shade(h,f){var q=rgb(h).map(function(v){return Math.round(v*(1-f))});return '#'+q.map(function(v){return ('0'+v.toString(16)).slice(-2)}).join('')}
+
+  // ---------- tone: light / dark / bold (brand gradient) ----------
+  function resolve(T,m){
+    var c1=T[0],c2=T[1],nd=!!T[4],R={c1:c1,c2:c2};
+    var mode=m==='bold'?'bold':(m==='alt'?(nd?'light':'dark'):(nd?'dark':'light'));
+    R.mode=mode;
+    if(mode==='light'){
+      R.bg=nd?'#F3F6FB':T[2];R.ink=nd?'#12171C':T[3];R.dark=false;R.muted=rgba(R.ink,.68);
+      R.card='#FFFFFF';R.cardStroke=null;R.cardShadow=true;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=c1;R.pillFg=onColor(c1);R.shape=[c1,c2];
+    }else if(mode==='dark'){
+      R.bg=nd?T[2]:shade(c2,.8);R.ink='#FFFFFF';R.dark=true;R.muted='rgba(255,255,255,.74)';
+      R.card='rgba(255,255,255,.09)';R.cardStroke='rgba(255,255,255,.14)';R.cardShadow=false;R.iconBg=[c1,c2];R.iconFg=onColor(c1);R.pillBg=c1;R.pillFg=onColor(c1);R.shape=[c1,c2];
+    }else{
+      var oc=onColor(c1),w=oc==='#FFFFFF';
+      R.bg=null;R.ink=oc;R.dark=w;R.muted=w?'rgba(255,255,255,.85)':'rgba(16,21,26,.78)';
+      R.card=w?'rgba(255,255,255,.18)':'rgba(255,255,255,.6)';R.cardStroke=w?'rgba(255,255,255,.32)':null;R.cardShadow=false;
+      R.iconBg=w?['#FFFFFF','#FFFFFF']:['#10151A','#10151A'];R.iconFg=w?c1:'#FFFFFF';R.pillBg=w?'#FFFFFF':'#10151A';R.pillFg=w?c1:'#FFFFFF';R.shape=w?['#FFFFFF','#FFFFFF']:['#000000','#000000'];
+    }
+    return R;
+  }
+  function drawBg(c,R,v,seed){
+    if(R.mode==='bold'){c.fillStyle=lg(c,0,0,1080,1080,R.c1,R.c2);c.fillRect(0,0,1080,1080)}
+    else{c.fillStyle=R.bg;c.fillRect(0,0,1080,1080)}
+    var bold=R.mode==='bold',a1=bold?.16:(R.dark?.30:.17),a2=bold?.11:(R.dark?.22:.13);
+    var s1=R.shape[0],s2=R.shape[1];
+    c.save();c.translate(-((seed||0)*37%90),((seed||0)*53%80)-40);
+    if(v===0){circ(c,990,130,370,s1,a1);circ(c,230,1020,300,s2,a2);circ(c,640,60,90,s2,a2*.9)}
+    if(v===1){c.beginPath();c.moveTo(112,0);c.lineTo(1160,0);c.lineTo(1160,330);c.lineTo(112,540);c.closePath();c.fillStyle=rgba(s1,a1);c.fill();circ(c,1010,1010,300,s2,a2)}
+    if(v===2){c.strokeStyle=rgba(s1,a1+.04);c.lineWidth=4;for(var r=1;r<=6;r++){c.beginPath();c.arc(930,230,r*95,0,7);c.stroke()}
+      c.fillStyle=rgba(s2,a2+.04);for(var gx=0;gx<7;gx++)for(var gy=0;gy<5;gy++){c.beginPath();c.arc(170+gx*34,760+gy*34,4,0,7);c.fill()}}
+    if(v===3){c.beginPath();c.moveTo(112,760);c.bezierCurveTo(360,640,560,900,1160,700);c.lineTo(1160,1160);c.lineTo(112,1160);c.closePath();c.fillStyle=rgba(s1,a1);c.fill();
+      c.beginPath();c.moveTo(112,860);c.bezierCurveTo(400,760,640,1000,1160,820);c.lineTo(1160,1160);c.lineTo(112,1160);c.closePath();c.fillStyle=rgba(s2,a2);c.fill();circ(c,960,120,300,s1,a2)}
+    c.restore();
+    if(R.mode==='light'){var rg=c.createRadialGradient(300,120,20,300,120,700);rg.addColorStop(0,'rgba(255,255,255,.65)');rg.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=rg;c.fillRect(112,0,968,1080)}
+  }
+  function drawStrip(c,R,d){
+    var bold=R.mode==='bold',a=bold?shade(R.c1,.38):R.c1,b=bold?shade(R.c2,.38):R.c2;
+    c.fillStyle=lg(c,0,0,0,1080,a,b);c.fillRect(0,0,112,1080);
+    var oc=onColor(a);
+    circ(c,56,76,34,'#FFFFFF',1);
+    c.textAlign='center';c.textBaseline='alphabetic';c.fillStyle=lum(a)>0.32?'#10151A':a;c.font='800 40px '+FD;c.fillText('L',56,90);
+    c.save();c.translate(70,600);c.rotate(-Math.PI/2);c.textAlign='center';c.fillStyle=oc;c.font='800 50px '+FD;c.fillText(d.brand||'Learnory Digital',0,0);c.restore();
+    c.save();c.translate(100,600);c.rotate(-Math.PI/2);c.textAlign='center';c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.85)':'rgba(16,21,26,.85)';c.font='600 22px '+FB;c.fillText('Premium Digital Subscriptions',0,0);c.restore();
+  }
+  function logoTile(c,R,d,x,y,s){
+    c.save();shadow(c,R.dark?'rgba(0,0,0,.5)':rgba(R.c1,.35),30,12);rr(c,x,y,s,s,s*0.24);c.fillStyle='#FFFFFF';c.fill();c.restore();noShadow(c);
+    var lim=d.logo;
+    if(lim){
+      var pad=s*0.13,bw=s-pad*2,sc=Math.min(bw/lim.naturalWidth,bw/lim.naturalHeight),lw=lim.naturalWidth*sc,lh=lim.naturalHeight*sc;
+      c.drawImage(lim,x+(s-lw)/2,y+(s-lh)/2,lw,lh);
+    }else{
+      var m=s*0.085;rr(c,x+m,y+m,s-m*2,s-m*2,s*0.18);c.fillStyle=lg(c,x,y,x+s,y+s,R.c1,R.c2);c.fill();
+      c.fillStyle=onColor(R.c1);c.textAlign='center';c.textBaseline='alphabetic';c.font='800 '+Math.round(s*0.55)+'px '+FD;c.fillText(Array.from(d.name)[0].toUpperCase(),x+s/2,y+s/2+s*0.19);
+    }
+  }
+  function pill(c,R,text,x,y,maxW,h,center){
+    c.font='600 '+Math.round(h*0.55)+'px '+FB;
+    var pw=Math.min(maxW,c.measureText(text).width+h);
+    if(center)x=x-pw/2;
+    rr(c,x,y,pw,h,h/2);c.fillStyle=R.pillBg;c.fill();
+    c.fillStyle=R.pillFg;c.textAlign='left';c.fillText(text,x+h/2,y+h*0.69);
+    return pw;
+  }
+  function cardBox(c,R,x,y,w,h,r){
+    c.save();
+    if(R.cardShadow)shadow(c,'rgba(20,30,60,.12)',22,6);
+    rr(c,x,y,w,h,r);c.fillStyle=R.card;c.fill();
+    c.restore();noShadow(c);
+    if(R.cardStroke){rr(c,x,y,w,h,r);c.strokeStyle=R.cardStroke;c.lineWidth=2;c.stroke()}
+  }
+  function iconDot(c,R,name,cx,cy,r){
+    var g=lg(c,cx-r,cy-r,cx+r,cy+r,R.iconBg[0],R.iconBg[1]);
+    c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=g;c.fill();
+    drawIcon(c,name,cx,cy,r*1.05,R.iconFg,2.2);
+  }
+  function rowCard(c,R,x,y,w,h,text,icon,sizes){
+    cardBox(c,R,x,y,w,h,h/2.4);
+    var r=h*0.33,ix=x+16+r;iconDot(c,R,icon,ix,y+h/2,r);
+    var txx=ix+r+18,tw=x+w-16-txx;
+    var tf=fitLines(c,text,tw,sizes||[32,30,28,26,24,22],FB,600,2);
+    c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;c.textAlign='left';
+    var lh=tf.fs*1.25,total=lh*(tf.lines.length-1);
+    tf.lines.forEach(function(l,j){c.fillText(l,txx,y+h/2+tf.fs*0.34-total/2+j*lh)});
+  }
+  function tileCard(c,R,x,y,w,h,text,icon,center,maxLines){
+    cardBox(c,R,x,y,w,h,24);
+    var r=Math.min(34,h*0.2),ix=center?x+w/2:x+18+r,iy=y+16+r;
+    iconDot(c,R,icon,ix,iy,r);
+    var ty=iy+r+14,th=y+h-ty-12;
+    var tf=fitLines(c,text,w-32,[28,26,24,22,20],FB,600,maxLines||3);
+    c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;c.textAlign=center?'center':'left';
+    var lh=tf.fs*1.25,tx=center?x+w/2:x+18;
+    var blockH=lh*tf.lines.length,start=ty+Math.max(0,(th-blockH)/2)+tf.fs*0.9;
+    tf.lines.forEach(function(l,j){c.fillText(l,tx,start+j*lh)});
+  }
+  function footerBar(c,R,pillsMode){
+    var X0=152,XR=1040,fy=944,fh=104,fw=XR-X0,cy=fy+fh/2;
+    var wa=R._wa,site=R._site;
+    function waPart(x0){
+      circ(c,x0+52,cy,36,'#25D366',1);drawIcon(c,'phone',x0+52,cy,38,'#FFFFFF',2.2);
+      c.textAlign='left';c.fillStyle='rgba(255,255,255,.75)';c.font='600 22px '+FB;c.fillText('WhatsApp',x0+104,cy-8);
+      c.fillStyle='#FFFFFF';var ns=44;c.font='800 '+ns+'px '+FD;while(c.measureText(wa).width>300&&ns>28){ns-=2;c.font='800 '+ns+'px '+FD}
+      c.fillText(wa,x0+104,cy+34);
+    }
+    function sitePart(x0,maxR){
+      drawIcon(c,'globe',x0+30,cy,40,'#FFFFFF',2);
+      var ss=32;c.font='700 '+ss+'px '+FD;var sw2=maxR-(x0+62);while(c.measureText(site).width>sw2&&ss>20){ss-=1;c.font='700 '+ss+'px '+FD}
+      c.fillStyle='#FFFFFF';c.textAlign='left';c.fillText(site,x0+62,cy+ss*0.34);
+    }
+    var fill=R.dark?'rgba(255,255,255,.12)':'#0F172A';
+    if(!pillsMode){
+      c.save();shadow(c,'rgba(0,0,0,.25)',26,8);rr(c,X0,fy,fw,fh,52);c.fillStyle=fill;c.fill();c.restore();noShadow(c);
+      if(R.dark){rr(c,X0,fy,fw,fh,52);c.strokeStyle='rgba(255,255,255,.2)';c.lineWidth=2;c.stroke()}
+      if(wa)waPart(X0+14);
+      c.fillStyle='rgba(255,255,255,.25)';c.fillRect(X0+470,cy-30,2,60);
+      if(site)sitePart(X0+450,XR-24);
+    }else{
+      var w1=440;
+      c.save();shadow(c,'rgba(0,0,0,.25)',22,8);
+      rr(c,X0,fy,w1,fh,52);c.fillStyle='#128C4B';c.fill();
+      rr(c,X0+w1+16,fy,fw-w1-16,fh,52);c.fillStyle=fill;c.fill();c.restore();noShadow(c);
+      if(R.dark){rr(c,X0+w1+16,fy,fw-w1-16,fh,52);c.strokeStyle='rgba(255,255,255,.2)';c.lineWidth=2;c.stroke()}
+      if(wa)waPart(X0+10);
+      if(site)sitePart(X0+w1+16+12,XR-18);
+    }
+  }
+  function nameBlock(c,R,text,x,y,w,sizes,maxLines,align){
+    var nf=fitLines(c,text,w,sizes,FD,800,maxLines);
+    c.font='800 '+nf.fs+'px '+FD;c.fillStyle=R.ink;c.textAlign=align||'left';
+    var b=y+nf.fs*0.8,lh=nf.fs*1.04;
+    nf.lines.forEach(function(l,i){c.fillText(l,x,b+i*lh)});
+    return {bottom:b+(nf.lines.length-1)*lh+nf.fs*0.22,fs:nf.fs};
+  }
+  function descBlock(c,R,text,x,y,w,sizes,maxLines,align){
+    var df=fitLines(c,text,w,sizes,FB,500,maxLines);
+    c.font='500 '+df.fs+'px '+FB;c.fillStyle=R.muted;c.textAlign=align||'left';
+    var b=y+df.fs*1.0,lh=df.fs*1.38;
+    df.lines.forEach(function(l,i){c.fillText(l,x,b+i*lh)});
+    return b+(df.lines.length-1)*lh+df.fs*0.45;
+  }
+
+  // ---------- six different layouts ----------
+  var X0=152,XR=1040,W=888;
+  function L0(c,d,R,icons){ // list + phone/window
+    var tile=168,ty=56;logoTile(c,R,d,X0,ty,tile);
+    var nx=X0+tile+30,nw=XR-nx;
+    pill(c,R,d.head,nx,ty+4,nw,54);
+    var nb=nameBlock(c,R,d.name,nx,ty+54+18,nw,[96,88,80,72,64,56],2);
+    rr(c,nx,Math.max(nb.bottom+6,ty+tile+2)-2,110,7,3.5);c.fillStyle=R.c2;c.fill();
+    var db=descBlock(c,R,d.desc,X0,Math.max(nb.bottom+14,ty+tile+14),W,[31,29,27],2);
+    var ftop=Math.max(340,db+10),fbot=906,gap=12,n=d.feats.length,rowH=Math.min(100,(fbot-ftop-gap*(n-1))/n),rowW=568;
+    d.feats.forEach(function(f,i){rowCard(c,R,X0,ftop+i*(rowH+gap),rowW,rowH,f,icons[i])});
+    var mh=n*rowH+(n-1)*gap;
+    if(d.mock===0)phoneMock(c,748+6,ftop,XR-748-12,mh,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    else windowMock(c,748,ftop+14,XR-748,mh-14,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    footerBar(c,R,false);
+  }
+  function L1(c,d,R,icons){ // centered hero + 3+2 tile grid
+    var s=160;logoTile(c,R,d,596-s/2,48,s);
+    pill(c,R,d.head,596,48+s+16,W,52,true);
+    var y0=48+s+16+52+10;
+    var nb=nameBlock(c,R,d.name,596,y0,W,[100,92,84,76,68,60],2,'center');
+    var db=descBlock(c,R,d.desc,596,nb.bottom+8,W-60,[28,26],2,'center');
+    var gy=Math.max(db+14,500),gap=16,rowH=Math.min(180,(906-gy-gap)/2);
+    var w3=(W-gap*2)/3,w2=(W-gap)/2;
+    for(var i=0;i<3;i++)tileCard(c,R,X0+i*(w3+gap),gy,w3,rowH,d.feats[i],icons[i],true,3);
+    for(var j=0;j<2;j++)tileCard(c,R,X0+j*(w2+gap),gy+rowH+gap,w2,rowH,d.feats[3+j],j===0?icons[3]:'headset',true,2);
+    footerBar(c,R,true);
+  }
+  function L2(c,d,R,icons){ // left text + chips, big tilted phone right
+    var s=124;logoTile(c,R,d,X0,52,s);
+    pill(c,R,d.head,X0+s+20,60,XR-(X0+s+20)-380,52);
+    var nb=nameBlock(c,R,d.name,X0,52+s+20,500,[88,80,72,64,56,48],3);
+    var db=descBlock(c,R,d.desc,X0,nb.bottom+8,500,[28,26,24],3);
+    var y=Math.max(db+20,470),ch=66,gap=12,avail=906-y;
+    ch=Math.min(76,(avail-gap*(d.feats.length-1))/d.feats.length);
+    d.feats.forEach(function(f,i){
+      var yy=y+i*(ch+gap);
+      c.font='600 26px '+FB;var tw=Math.min(500-ch-30,c.measureText(f).width),cw=ch+tw+34;
+      var fit=fitLines(c,f,500-ch-34,[26,24,22,20],FB,600,1);c.font='600 '+fit.fs+'px '+FB;
+      cw=Math.min(500,ch+c.measureText(fit.lines[0]).width+36);
+      cardBox(c,R,X0,yy,cw,ch,ch/2);
+      iconDot(c,R,icons[i],X0+ch/2,yy+ch/2,ch*0.34);
+      c.fillStyle=R.ink;c.textAlign='left';c.fillText(fit.lines[0],X0+ch+6,yy+ch/2+fit.fs*0.34);
+    });
+    c.save();c.translate(870,500);c.rotate(0.11);
+    if(d.mock===0)phoneMock(c,-165,-350,330,700,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    else windowMock(c,-190,-250,380,500,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    c.restore();
+    footerBar(c,R,false);
+  }
+  function L3(c,d,R,icons){ // spotlight
+    var s=140;logoTile(c,R,d,X0,52,s);
+    var nx=X0+s+26,nw=XR-nx;
+    pill(c,R,d.head,nx,56,nw,52);
+    var nb=nameBlock(c,R,d.name,nx,56+52+14,nw,[84,76,68,60,52],2);
+    var sy=Math.max(nb.bottom+22,52+s+18),sh=250;
+    c.save();shadow(c,'rgba(0,0,0,.22)',28,10);rr(c,X0,sy,W,sh,36);c.fillStyle=lg(c,X0,sy,XR,sy+sh,R.c1,R.c2);c.fill();c.restore();noShadow(c);
+    var oc=onColor(R.c1),big=72;
+    c.beginPath();c.arc(X0+36+big+10,sy+sh/2,big,0,7);c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.22)':'rgba(16,21,26,.16)';c.fill();
+    drawIcon(c,icons[0],X0+36+big+10,sy+sh/2,big*1.0,oc,2.1);
+    c.fillStyle=oc==='#FFFFFF'?'rgba(255,255,255,.85)':'rgba(16,21,26,.8)';c.font='600 26px '+FB;c.textAlign='left';
+    var tx=X0+36+big*2+44;c.fillText('প্রধান সুবিধা',tx,sy+60);
+    var sf=fitLines(c,d.feats[0],XR-36-tx,[50,46,42,38,34],FB,700,3);
+    c.font='700 '+sf.fs+'px '+FB;c.fillStyle=oc;
+    var lh=sf.fs*1.22,total=lh*(sf.lines.length-1),cy=sy+sh/2+24;
+    sf.lines.forEach(function(l,j){c.fillText(l,tx,cy+sf.fs*0.3-total/2+j*lh)});
+    var ty=sy+sh+20,gap=16,tw=(W-gap*3)/4,th=906-ty;
+    for(var i=0;i<4;i++)tileCard(c,R,X0+i*(tw+gap),ty,tw,th,d.feats[1+i],i<3?icons[1+i]:'headset',true,4);
+    footerBar(c,R,false);
+  }
+  function L4(c,d,R,icons){ // editorial numbered list + brand circle
+    pill(c,R,d.head,X0,56,W,54);
+    var nb=nameBlock(c,R,d.name,X0,56+54+16,W,[112,100,92,84,76,68,60],2);
+    rr(c,X0,nb.bottom+6,110,7,3.5);c.fillStyle=R.c2;c.fill();
+    var db=descBlock(c,R,d.desc,X0,nb.bottom+22,W,[30,28,26],2);
+    var ftop=Math.max(db+14,380),n=d.feats.length,rowH=Math.min(96,(906-ftop)/n);
+    d.feats.forEach(function(f,i){
+      var yy=ftop+i*rowH;
+      c.fillStyle=R.c1===R.ink?R.ink:(R.mode==='bold'?R.ink:R.c1);c.font='800 52px '+FD;c.textAlign='left';c.fillText(two(i+1),X0,yy+rowH/2+18);
+      c.fillStyle=rgba(R.mode==='bold'?R.ink:(R.dark?'#ffffff':R.c1),.35);c.fillRect(X0+86,yy+rowH*0.2,3,rowH*0.6);
+      var tf=fitLines(c,f,560-110,[32,30,28,26,24],FB,600,2);
+      c.font='600 '+tf.fs+'px '+FB;c.fillStyle=R.ink;
+      var lh=tf.fs*1.25,total=lh*(tf.lines.length-1);
+      tf.lines.forEach(function(l,j){c.fillText(l,X0+108,yy+rowH/2+tf.fs*0.34-total/2+j*lh)});
+      if(i<n-1){c.fillStyle=rgba(R.mode==='bold'?R.ink:(R.dark?'#ffffff':R.ink),.14);c.fillRect(X0,yy+rowH,560,2)}
+    });
+    var cx=890,cy=ftop+(906-ftop)/2,r=Math.min(165,(906-ftop)/2);
+    c.save();shadow(c,'rgba(0,0,0,.25)',34,14);c.beginPath();c.arc(cx,cy,r,0,7);c.fillStyle=lg(c,cx-r,cy-r,cx+r,cy+r,R.c1,R.c2);c.fill();c.restore();noShadow(c);
+    c.strokeStyle=rgba(R.mode==='bold'?R.ink:R.c1,.35);c.lineWidth=3;
+    [r+22,r+46].forEach(function(rr2){c.beginPath();c.arc(cx,cy,rr2,0,7);c.stroke()});
+    var ts=Math.min(190,r*1.25);logoTile(c,R,d,cx-ts/2,cy-ts/2,ts);
+    footerBar(c,R,true);
+  }
+  function L5(c,d,R,icons){ // floating cards over big tilted window
+    var s=150;logoTile(c,R,d,X0,52,s);
+    var nx=X0+s+26,nw=XR-nx;
+    pill(c,R,d.head,nx,56,nw,52);
+    var nb=nameBlock(c,R,d.name,nx,56+52+14,nw,[88,80,72,64,56],2);
+    var db=descBlock(c,R,d.desc,X0,Math.max(nb.bottom+10,52+s+14),W,[28,26],2);
+    var ftop=Math.max(db+16,380),n=d.feats.length,gap=14,rowH=Math.min(92,(906-ftop-gap*(n-1))/n);
+    var mh=n*rowH+(n-1)*gap;
+    c.save();c.translate(790,ftop+mh/2);c.rotate(-0.045);
+    if(d.mock===0)phoneMock(c,-165,-mh/2-6,330,mh+12,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    else windowMock(c,-262,-mh/2,524,mh,[R.c1,R.c2],icons,d.name,R.mode==='dark');
+    c.restore();
+    var R5=Object.assign({},R,{card:'#FFFFFF',cardStroke:null,cardShadow:true,ink:'#12171C',iconBg:[R.c1,R.c2],iconFg:onColor(R.c1)});
+    d.feats.forEach(function(f,i){rowCard(c,R5,X0,ftop+i*(rowH+gap),430,rowH,f,icons[i],[28,26,24,22,20])});
+    footerBar(c,R,false);
+  }
+  var LAYOUTS=[L0,L1,L2,L3,L4,L5];
+
+  function drawPoster(cv,d,size){
+    cv.width=cv.height=size;
+    var c=cv.getContext('2d'),k=size/1080;c.setTransform(k,0,0,k,0,0);
+    var R=resolve(d.theme,d.tone);R._wa=d.wa;R._site=d.site;
+    drawBg(c,R,d.bgv%4,d.seed);
+    var icons=pickIcons(d.feats);
+    c.textBaseline='alphabetic';
+    c.save();c.translate(-56,0);
+    LAYOUTS[d.layout%LAYOUTS.length](c,d,R,icons);
+    c.restore();
+    c.textAlign='center';c.fillStyle=R.muted;c.font='600 22px '+FB;
+    c.fillText((d.brand||'Learnory Digital')+'  ·  Premium Digital Subscriptions',540,1066);
+  }
+  // ---------- save helpers (plain browser downloads) ----------
+  function saveBlob(blob,name){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000);
+  }
+  var CT=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+  function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CT[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+  function zip(files){
+    var enc=new TextEncoder(),parts=[],central=[],offset=0,cd=0;
+    files.forEach(function(f){
+      var name=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+      var h=new DataView(new ArrayBuffer(30));
+      h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+      h.setUint16(10,0,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);
+      h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+      parts.push(h.buffer,name,f.data);
+      var c=new DataView(new ArrayBuffer(46));
+      c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);
+      c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);
+      c.setUint16(28,name.length,true);c.setUint32(42,offset,true);
+      central.push(c.buffer,name);cd+=46+name.length;
+      offset+=30+name.length+sz;
+    });
+    var e=new DataView(new ArrayBuffer(22));
+    e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cd,true);e.setUint32(16,offset,true);
+    return new Blob(parts.concat(central,[e.buffer]),{type:'application/zip'});
+  }
+
+  // ---------- views ----------
+  var cur=-1,days=[];
+  function showView(v){
+    $('panel-home').hidden=v!=='home';$('panel-prod').hidden=v!=='prod';$('panel-set').hidden=v!=='set';
+    $('tab-home').setAttribute('aria-selected',v!=='set');$('tab-set').setAttribute('aria-selected',v==='set');
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){showView(b.dataset.tab==='set'?'set':(cur>=0&&b.dataset.tab==='home'&&!$('panel-prod').hidden?'prod':'home'))})});
+  $('goHome').addEventListener('click',function(){showView(cur>=0?'prod':'home')});
+  $('back').addEventListener('click',function(){showView('home')});
+
+  [['brand','brand'],['website','website'],['page','page'],['wa','wa'],['walink','walink']].forEach(function(p){
+    var el=$(p[0]);el.value=S[p[1]]||'';
+    el.addEventListener('input',function(){S[p[1]]=el.value;save()});
+  });
+
+  function renderHome(){
+    var q=$('q').value.trim().toLowerCase(),h='';
+    P.forEach(function(p,i){
+      if(q&&p[0].toLowerCase().indexOf(q)<0&&p[1].toLowerCase().indexOf(q)<0)return;
+      var th=THEME[p[0]]||THEME_FALLBACK;
+      h+='<button class="pcard" data-i="'+i+'"><span class="no"><span class="themechip"><i style="background:'+th[0]+'"></i><i style="background:'+th[1]+'"></i></span> '+bn(i+1)+' নম্বর'+(LOGOS[p[0]]?' · লোগো আছে':'')+'</span><b>'+esc(p[0])+'</b><span>'+esc(p[1])+'</span></button>';
+    });
+    $('plist').innerHTML=h||'<p class="sub">এই নামে কোনো প্রোডাক্ট নেই।</p>';
+  }
+  $('q').addEventListener('input',renderHome);
+  $('plist').addEventListener('click',function(e){
+    var b=e.target.closest('.pcard');if(!b)return;
+    openProduct(+b.dataset.i);
+  });
+
+  function refreshLogoUI(){
+    if(cur<0)return;
+    var nm=P[cur][0],prev=$('logoPrev');
+    if(LOGOS[nm]){prev.innerHTML='<img alt="লোগো">';prev.firstChild.src=LOGOS[nm];$('logoDel').hidden=false;$('logoPick').textContent='লোগো বদলান'}
+    else{prev.innerHTML='<span>লোগো নেই</span>';$('logoDel').hidden=true;$('logoPick').textContent='লোগো বাছুন'}
+  }
+  function openProduct(i){
+    cur=i;days=[];$('results').innerHTML='';
+    $('pName').textContent=P[i][0];$('pLine').textContent=P[i][1];
+    $('nDays').value=S.days||30;
+    updateRange();showView('prod');$('genBtn').textContent='ক্যাপশন আর পোস্টার বানান';
+    loadLogo(P[i][0]).then(refreshLogoUI);refreshLogoUI();
+  }
+  $('logoFile').addEventListener('change',function(){
+    var f=this.files&&this.files[0],inp=this;if(!f||cur<0)return;
+    var nm=P[cur][0],rd=new FileReader();
+    rd.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var w=im.naturalWidth||320,h=im.naturalHeight||320,s=Math.min(1,360/Math.max(w,h));
+        var cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*s));cv.height=Math.max(1,Math.round(h*s));
+        cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+        LOGOS[nm]=cv.toDataURL('image/png');
+        if(!saveLogos())toast('লোগো এই সেশনের জন্য বসেছে, কিন্তু ফোনে সেভ হয়নি');else toast('লোগো বসেছে');
+        loadLogo(nm).then(function(){refreshLogoUI();renderHome();if(days.length)render()});
+      };
+      im.onerror=function(){toast('এই ফাইলটা ছবি হিসেবে খোলা গেল না')};
+      im.src=rd.result;
+    };
+    rd.readAsDataURL(f);inp.value='';
+  });
+  $('logoDel').addEventListener('click',function(){
+    if(cur<0)return;delete LOGOS[P[cur][0]];delete LOGO_IMG[P[cur][0]];saveLogos();refreshLogoUI();renderHome();toast('লোগো সরানো হয়েছে');if(days.length)render();
+  });
+  function getStart(){return $('startDate').value?new Date($('startDate').value+'T09:00:00'):new Date()}
+  function getN(){var n=parseInt($('nDays').value,10);if(!(n>=1))n=1;if(n>90)n=90;return n}
+  function updateRange(){
+    var s=getStart(),n=getN(),e=new Date(s.getTime()+(n-1)*86400000);
+    $('rangeHint').textContent=bn(n)+' দিন: '+dateLabel(s)+' থেকে '+dateLabel(e)+'।'+(n>20?' ২০ দিনের পর ক্যাপশনের ঢং আর সাজানো নতুন করে ঘুরবে।':'');
+  }
+  $('startDate').addEventListener('change',updateRange);
+  $('nDays').addEventListener('input',updateRange);
+
+  // ---------- build for one product ----------
+  function buildFor(pi,start,n){
+    var p=P[pi],out=[],name=p[0];
+    var site=S.website.trim().replace(/^https?:\/\//,''),wa=S.wa.trim(),brand=S.brand.trim()||'Learnory Digital';
+    var th=THEME[name]||THEME_FALLBACK,aud=AUD[name]||AUD_FALLBACK,xtra=XTRA[name]||[];
+    var ct=contact(),rest=WHY.slice(1);
+    for(var i=0;i<n;i++){
+      var k=(i+pi*7)%20,st=k%4,v=(Math.floor(k/4)+Math.floor(i/20))%5;
+      var c={n:name,line:p[1],feats:p[2],aud:aud,xtra:xtra,caveat:p[3],contact:ct,brand:brand};
+      c.why=[WHY[0]].concat(rotate(rest,i%rest.length).slice(0,4));
+      var kw=makeKw(c,v);c.kws=kw.kws;c.kw=kw.kw;
+      var tg=p[4],tl=[tg[0]].concat(rotate(tg.slice(1),i%Math.max(1,tg.length-1)).slice(0,6));
+      tl.push('LearnoryDigital');
+      c.tags=tl.filter(function(t,j){return tl.indexOf(t)===j}).map(function(t){return '#'+t}).join(' ');
+      var dt=new Date(start.getTime()+i*86400000);
+      out.push({
+        n:i+1,date:dt,name:name,slug:slug(name),angle:st,caption:caption(st,v,c),
+        poster:{brand:brand,name:name,desc:p[1],head:PH[(i+pi)%PH.length],
+          feats:rotate(p[2].slice(0,4),(i*3+pi)%4).concat(LAST[(i+pi)%LAST.length]),
+          wa:wa,site:site,theme:th,layout:LAY[(i+pi)%LAY.length],tone:TONE[(i+Math.floor(i/6))%3],bgv:(i*3+pi)%4,seed:i+pi*3,mock:(i+pi)%2,logo:null}
+      });
+    }
+    return out;
+  }
+  var LAY=[0,2,1,4,3,5],TONE=['native','bold','alt'];
+  function pd(d){d.poster.logo=logoImg(d.name);return d.poster}
+
+  // ---------- results ----------
+  function copyString(text,fallbackEl){
+    var done=function(){toast('কপি হয়েছে')};
+    var fb=function(){
+      var el=fallbackEl||document.createElement('textarea');
+      if(!fallbackEl){el.value=text;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el)}
+      el.focus();el.select();
+      var ok=false;try{ok=document.execCommand('copy')}catch(e){}
+      if(!fallbackEl)el.remove();
+      ok?done():toast('কপি করা গেল না, লেখাটা সিলেক্ট করে নিজে কপি করুন');
+    };
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fb)}else fb();
+  }
+  function autosize(ta){ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px'}
+  function allCaptionsText(){
+    return days.map(function(d){return 'দিন '+d.n+' ('+dateLabel(d.date)+')\n'+d.caption}).join('\n\n━━━━━━━━━━\n\n');
+  }
+  function render(){
+    var box=$('results');box.innerHTML='';
+    if(!days.length)return;
+    var top=document.createElement('div');top.className='box';
+    var nm=P[cur][0];
+    top.innerHTML='<h2>'+esc(nm)+': '+bn(days.length)+' দিনের পোস্ট তৈরি</h2><p class="sub">ক্যাপশনে হাত দিয়ে বদলাতে পারবেন। ফেসবুকে "শিডিউল" দিয়ে তারিখ অনুযায়ী বসান।</p>';
+    var bulk=document.createElement('div');bulk.className='bulk';
+    var z=document.createElement('button');z.className='btn primary';z.id='zipBtn';z.textContent='সব ছবি ডাউনলোড (ZIP)';
+    z.addEventListener('click',function(){saveZip(z)});
+    var ca=document.createElement('button');ca.className='btn primary';ca.id='copyAllBtn';ca.textContent='সব ক্যাপশন কপি';
+    ca.addEventListener('click',function(){copyString(allCaptionsText())});
+    var t=document.createElement('button');t.className='btn';t.id='txtBtn';t.textContent='সব ক্যাপশন TXT ফাইলে সেভ';
+    t.addEventListener('click',function(){
+      saveBlob(new Blob([allCaptionsText()],{type:'text/plain;charset=utf-8'}),days[0].slug+'-captions.txt');toast('সেভ হচ্ছে');
+    });
+    bulk.appendChild(z);bulk.appendChild(ca);bulk.appendChild(t);top.appendChild(bulk);
+    box.appendChild(top);
+    days.forEach(function(d,i){
+      var card=document.createElement('div');card.className='card';
+      var meta=document.createElement('div');meta.className='meta';
+      meta.innerHTML='<b>দিন '+bn(d.n)+'</b><span>'+dateLabel(d.date)+'</span><span class="pill">'+esc(ANGLE[d.angle])+'</span>';
+      var ta=document.createElement('textarea');ta.rows=Math.min(16,d.caption.split('\n').length+1);ta.value=d.caption;
+      ta.id='cap'+i;ta.setAttribute('aria-label','দিন '+d.n+' এর ক্যাপশন');
+      ta.addEventListener('input',function(){d.caption=ta.value;autosize(ta)});
+      var cv=document.createElement('canvas');cv.className='poster';cv.setAttribute('role','img');cv.setAttribute('aria-label','দিন '+d.n+' এর পোস্টার');
+      drawPoster(cv,pd(d),720);
+      var act=document.createElement('div');act.className='actions';
+      var cp=document.createElement('button');cp.className='btn small primary';cp.textContent='ক্যাপশন কপি';
+      cp.addEventListener('click',function(){copyString(ta.value,ta)});
+      var sv=document.createElement('button');sv.className='btn small';sv.textContent='ছবি সেভ';
+      sv.addEventListener('click',function(){posterBlob(d).then(function(b){saveBlob(b,d.slug+'-day-'+two(d.n)+'.jpg');toast('সেভ হচ্ছে')})});
+      act.appendChild(cp);act.appendChild(sv);
+      card.appendChild(meta);card.appendChild(ta);card.appendChild(act);card.appendChild(cv);
+      box.appendChild(card);autosize(ta);
+    });
+    setTimeout(function(){box.querySelectorAll('textarea').forEach(autosize)},400);
+  }
+  function posterBlob(d){
+    return new Promise(function(res){
+      var off=document.createElement('canvas');drawPoster(off,pd(d),1080);
+      off.toBlob(function(b){res(b)},'image/jpeg',0.95);
+    });
+  }
+  function saveZip(btn){
+    btn.disabled=true;var old=btn.textContent,files=[],i=0;
+    function next(){
+      if(i>=days.length){
+        saveBlob(zip(files),days[0].slug+'-posters.zip');btn.disabled=false;btn.textContent=old;toast('ZIP সেভ হচ্ছে');return;
+      }
+      btn.textContent='ছবি বানানো হচ্ছে '+bn(i+1)+'/'+bn(days.length);
+      var d=days[i];
+      posterBlob(d).then(function(b){return b.arrayBuffer()}).then(function(ab){
+        files.push({name:d.slug+'-day-'+two(d.n)+'.jpg',data:new Uint8Array(ab)});i++;setTimeout(next,0);
+      });
+    }
+    next();
+  }
+
+  $('genBtn').addEventListener('click',function(){
+    if(cur<0)return;
+    var btn=$('genBtn');btn.disabled=true;btn.textContent='বানানো হচ্ছে...';
+    S.days=getN();save();
+    var go=function(){
+      days=buildFor(cur,getStart(),getN());
+      btn.disabled=false;btn.textContent='আবার বানান';
+      render();
+      var r=$('results');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    var ld=[loadLogo(P[cur][0])];
+    try{ld=ld.concat([document.fonts.load('800 40px "Anek Bangla"','অআকL'),document.fonts.load('700 40px "Anek Bangla"','অআকL'),document.fonts.load('600 40px "Anek Bangla"','অআকL'),document.fonts.load('600 40px "Hind Siliguri"','অআকL'),document.fonts.load('500 40px "Hind Siliguri"','অআকL')])}catch(e){}
+    Promise.all(ld).then(go,go);
+  });
+
+  // ---------- init ----------
+  var t0=new Date(Date.now()+86400000);
+  $('startDate').value=iso(t0);
+  renderHome();
+})();
+</script>
+</body>
+</html>

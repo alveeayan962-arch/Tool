@@ -1,6 +1,6 @@
 // Learnory Caption Studio service worker
-var VER='lpf-v3';
-var SHELL=['./','index.html','manifest.webmanifest'];
+var VER='lpf-v4';
+var SHELL=['./','index.html','manifest.webmanifest','fonts/HindSiliguri-500.woff2','fonts/HindSiliguri-600.woff2','fonts/HindSiliguri-700.woff2'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(VER).then(function(c){return Promise.all(SHELL.map(function(u){return c.add(u).catch(function(){})}))}).then(function(){return self.skipWaiting()}));
 });

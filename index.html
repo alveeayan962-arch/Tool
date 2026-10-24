@@ -84,13 +84,24 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent)}
 .empty{color:var(--muted);font-size:14px}
+canvas.pv{width:100%;height:auto;aspect-ratio:4/5;border-radius:12px;background:var(--bg);display:block}
+.actions{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.lgimg{width:64px;height:48px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);text-align:center;line-height:1.2}
+.lgrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}
+.lgrow b{flex:1 1 140px;min-width:0}
+.lgcell{flex:none}
+.seo summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
+.seo .seotxt{margin:6px 0 10px;word-break:break-word}
+.chk{flex-direction:row;align-items:center;gap:10px;color:var(--fg);font-size:16px;padding:6px 4px;min-height:40px}
+.chk input{width:22px;height:22px;flex:none}
+.mixlist{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:6px 10px;background:var(--bg)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div>
     <h1>Learnory Caption Studio</h1>
-    <p class="sub">Ready-made Facebook captions for every product, plus marketing reminders.</p>
+    <p class="sub">Ready-made Facebook captions and posters for every product, plus marketing reminders.</p>
   </div>
 
   <div class="tabs" role="tablist">
@@ -112,6 +123,11 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       <p class="sub" id="installTxt"></p>
       <button class="btn primary" id="installBtn" hidden>Install app</button>
       <button class="btn small" id="installHide">Don't show again</button>
+    </div>
+    <div class="box">
+      <h2>📅 Multi-day mix</h2>
+      <p class="sub">Pick several products and get a caption and a different poster for every day in one go. Best for scheduling the next 15 days at once.</p>
+      <button class="btn primary" id="mixOpen">Create a mix (captions + posters)</button>
     </div>
     <label>Search products
       <input type="search" id="q" placeholder="e.g. Claude, Netflix, VPN">
@@ -138,9 +154,35 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       </label>
       <p class="tiny">Use a new series number every month to get a completely new set of captions. The same number always gives the same set.</p>
       <p class="tiny" id="rangeHint"></p>
-      <button class="btn primary" id="genBtn">Generate captions</button>
+      <button class="btn primary" id="genBtn">Generate captions and posters</button>
+    </div>
+    <div class="box">
+      <h2>Product logo</h2>
+      <div class="lgrow"><div class="lgcell" id="lgThumb"></div><p class="tiny" id="lgState" style="flex:1 1 160px"></p></div>
+      <div class="btnrow"><button class="btn small" id="lgUp">Upload logo</button><button class="btn small" id="lgDel" hidden>Remove logo</button></div>
+      <p class="tiny">Upload the logo once. It is saved on this phone and used on every poster of this product, under the headline.</p>
     </div>
     <div id="results" class="panel"></div>
+  </section>
+
+  <!-- MIX -->
+  <section class="panel" id="panel-mix" hidden>
+    <button class="btn small back" id="backMix">← All products</button>
+    <div class="box">
+      <h2>Multi-day mix</h2>
+      <p class="sub">Tick the products to rotate through. Each day gets one product, a fresh caption and a different poster.</p>
+      <div class="btnrow"><button class="btn small" id="mixAll">Select all</button><button class="btn small" id="mixNone">Clear</button><span class="tiny" id="mixSelN" style="align-self:center"></span></div>
+      <div class="mixlist" id="mixList"></div>
+      <div class="row">
+        <label>Start date<input type="date" id="mixStart"></label>
+        <label>Number of days (1–60)<input type="number" id="mixDays" min="1" max="60" inputmode="numeric" value="15"></label>
+      </div>
+      <label>Series number (change it for a completely new set)
+        <input type="number" id="mixSeries" min="1" max="5000" inputmode="numeric" value="1">
+      </label>
+      <button class="btn primary" id="mixGen">Create mix</button>
+    </div>
+    <div id="mixResults" class="panel"></div>
   </section>
 
   <!-- REMINDERS -->
@@ -202,7 +244,18 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       <label>WhatsApp number
         <input type="text" id="wa" inputmode="tel">
       </label>
+      <label>Hashtags per caption (0–12)
+        <input type="number" id="tagN" min="0" max="12" inputmode="numeric">
+      </label>
       <p class="tiny">After changing these, open a product and tap "Generate captions" again.</p>
+    </div>
+    <div class="box">
+      <h2>Product logos</h2>
+      <p class="tiny" id="lgCount"></p>
+      <p class="tiny">Upload each product logo once (PNG with transparent background works best). Logos stay on this phone and are used on the posters.</p>
+      <input type="search" id="lgQ" placeholder="Search products">
+      <div id="lgList" class="plist"></div>
+      <input type="file" id="logoFile" accept="image/*">
     </div>
     <div class="box" id="customBox">
       <h2>My own products</h2>
@@ -236,7 +289,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 (function(){
   // ---------- settings + helpers ----------
   var KEY='learnory-post-factory-v3';
-  var DEFAULTS={brand:'Learnory Digital',website:'',page:'Learnory Digital',wa:'01324893306',days:30};
+  var DEFAULTS={brand:'Learnory Digital',website:'',page:'Learnory Digital',wa:'01324893306',days:30,tags:10};
   var S=load();
   function load(){
     try{var r=localStorage.getItem(KEY);if(r)return Object.assign({},DEFAULTS,JSON.parse(r))}catch(e){}
@@ -361,7 +414,8 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   function mkRng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
   function pk(r,a){return a[Math.floor(r()*a.length)]}
   function shuf(r,a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),t=b[i];b[i]=b[j];b[j]=t}return b}
-  function fill(s,c){return s.replace(/\{n\}/g,c.n).replace(/\{b\}/g,c.b||c.n).replace(/\{line\}/g,c.line).replace(/\{brand\}/g,c.brand)}
+  function fill(s,c){return s.replace(/\{ns\}/g,c.ns||c.n)
+      .replace(/\{n\}/g,c.n).replace(/\{b\}/g,c.b||c.n).replace(/\{line\}/g,c.line).replace(/\{brand\}/g,c.brand)}
 
   var BASEMAP={'Adobe Creative Cloud':'Adobe','Microsoft 365':'Microsoft 365','Google One':'Google One','Google Meet':'Google Meet','Windows License Key':'Windows','Amazon Prime Video':'Amazon Prime',
    'Cursor AI Pro':'Cursor','Google Gemini Pro':'Gemini','ElevenLabs Creator':'ElevenLabs','Turnitin Instructor':'Turnitin','LinkedIn Premium':'LinkedIn','Surfshark VPN':'Surfshark',
@@ -374,56 +428,6 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   }
   function camelWords(s){s=s.replace(/^AI(?=[a-z])/,'AI ');return s.replace(/([a-z0-9])([A-Z])/g,'$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g,'$1 $2')}
 
-  // ---- 1. hooks (first line): grouped by tone, plus category specific ones ----
-  var HOOK={
-   q:['বাংলাদেশে {n} Subscription খুঁজছেন?','{n} নিতে চান, কিন্তু কোথা থেকে নেবেন বুঝতে পারছেন না?','{n} Account কি আপনার কাজে লাগবে?','{n} নিয়ে কোনো প্রশ্ন আছে?','প্রিমিয়াম {n} Subscription নিতে চান?','{n} ব্যবহার করতে চান, সহজ উপায় খুঁজছেন?','{b} Premium ব্যবহার করতে চাইলে কী করবেন?','{n} কেনার আগে কী জানা দরকার?'],
-   d:['{n} Subscription এখন সহজেই, {brand}-এর মাধ্যমে।','প্রিমিয়াম {n} Subscription, বাংলাদেশি ইউজারদের জন্য।','{n} Account পেতে চাইলে যোগাযোগ করুন।','{brand} থেকে {n} Subscription নিন সহজে।','প্রফেশনাল কাজের জন্য {n} Subscription।','{n} Subscription Bangladesh, এখন আমাদের কাছে।','{n} ব্যবহার করুন নিশ্চিন্তে।'],
-   b:['কাজ আরও সহজ করতে চান? {n} হতে পারে আপনার সমাধান।','সময় বাঁচাতে আর কাজের মান বাড়াতে {n}।','কাজের গতি বাড়াতে {n} ব্যবহার করে দেখুন।','প্রতিদিনের কাজ গুছিয়ে করতে {n}।','কম ঝামেলায় বেশি কাজ, সাথে {n}।','নিজের কাজকে প্রফেশনাল করতে {n}।','{n} দিয়ে কাজ হোক আরও স্মার্ট।','ডিজিটাল কাজে এগিয়ে থাকতে {n}।'],
-   p:['প্রতিদিনের কাজ সামলাতে হিমশিম খাচ্ছেন? {n} সাহায্য করতে পারে।','কাজের চাপ কমাতে {n} ব্যবহার করে দেখুন।','বারবার একই কাজ করতে করতে ক্লান্ত? {n} দেখে নিন।','সঠিক টুল না পেলে কাজ আটকে যায়, তাই {n}।','ভালো টুল খুঁজে পাচ্ছেন না? {n} Subscription দেখুন।','সময়ের অভাবে কাজ পিছিয়ে যাচ্ছে? {n} কাজে আসতে পারে।'],
-   t:['{n} Subscription নিন ভরসার সাথে, {brand}-এ।','অর্ডারের আগে শর্ত, অর্ডারের পরে সাপোর্ট, সবই থাকছে {n}-এর সাথে।','{n} Subscription, সাথে পরিষ্কার শর্ত আর Customer Support।','Genuine {n} Subscription খুঁজছেন? এখানে যোগাযোগ করুন।','ঝামেলা ছাড়া {n} Subscription নিতে চাইলে {brand}।','{n} নিন সহজ অর্ডার প্রসেসে।']
-  };
-  var HOOKC={
-   ai:['AI দিয়ে কাজ করতে চান? {n} Subscription আছে।','লেখা, গবেষণা আর কোডিংয়ের কাজ দ্রুত করতে {n}।','AI টুল ব্যবহারে এগিয়ে থাকতে {n} Subscription।','প্রতিদিনের কাজে AI-এর সাহায্য চান? {n} দেখে নিন।'],
-   edu:['পড়াশোনা ও স্কিল বাড়াতে {n} Subscription।','স্টুডেন্টদের কাজের টুল: {n}।','পড়াশোনা, রিসার্চ আর লেখালেখি সহজ করতে {n}।'],
-   ent:['পছন্দের বিনোদন উপভোগ করতে {n} Subscription।','অবসরে ভালো কিছু উপভোগ করতে চান? {n} আছে।','{n} দিয়ে বিনোদন হোক ঝামেলা ছাড়া।'],
-   creative:['ডিজাইন আর এডিটিংয়ের কাজ প্রফেশনাল করতে {n}।','ক্রিয়েটিভ কাজের জন্য {n} Subscription।','ক্লায়েন্টের কাজ দ্রুত করতে {n} ব্যবহার করুন।'],
-   prod:['অফিস ও ব্যবসার কাজ সহজ করতে {n} Subscription।','প্রফেশনাল কাজের জন্য {n} ব্যবহার করুন।','কাজের গতি বাড়াতে {n}।'],
-   cloud:['ডিজিটাল কাজে নিরাপত্তা ও সুবিধা চাইলে {n} Subscription।','অনলাইন কাজ আরও গোছানো করতে {n}।','{n} Subscription নিন প্রয়োজনের জন্য।']
-  };
-  var HGROUPS=['q','d','b','p','t'];
-  // ---- 2. introductions ----
-  var INTRO=['{n} হলো {line}।','সংক্ষেপে {n}: {line}।','সহজ কথায়, {n} মানে {line}।','{line}, এটাই {n}।','যাঁরা জানতে চান {n} কী, তাঁদের জন্য: {line}।','{n} সম্পর্কে এক কথায়: {line}।','{n} একটি সাবস্ক্রিপশন সার্ভিস, যা হলো {line}।'];
-  var INTRO2=['বাংলাদেশ থেকে সহজে {n} Subscription নিতে পারবেন {brand}-এর মাধ্যমে।','{brand}-এর মাধ্যমে বাংলাদেশে বসেই {n} Subscription অর্ডার করা যায়।','{n} Subscription Bangladesh নিয়ে বিস্তারিত জানতে আমাদের মেসেজ করুন।','অর্ডারের আগে প্যাকেজ আর শর্ত জেনে নিতে পারবেন {brand}-এ।',null,null,null];
-  // ---- 3. benefits (category level, conditional wording, no unverified claims) ----
-  var BEN={
-   ai:['প্রতিদিনের লেখা ও গবেষণার কাজে সময় বাঁচে','কাজের মান আরও গুছিয়ে তুলতে সাহায্য করে','নতুন আইডিয়া ও সমাধান দ্রুত পাওয়া যায়','একই টুলে একাধিক ধরনের কাজ সামলানো যায়','বেশি ব্যবহারের সুযোগ, সীমা প্ল্যান অনুযায়ী'],
-   edu:['পড়াশোনা ও রিসার্চে সময় বাঁচে','লেখা ও উপস্থাপনার মান বাড়াতে সাহায্য করে','প্রজেক্ট বা পরীক্ষার প্রস্তুতি আরও গোছানো হয়','নতুন স্কিল শেখার সুযোগ বাড়ে','কাজ আগের চেয়ে দ্রুত শেষ করা যায়'],
-   ent:['পছন্দের কনটেন্ট ঝামেলা ছাড়া উপভোগ করা যায়','অবসর সময় আরও আনন্দে কাটে','একাধিক ডিভাইসে ব্যবহারের সুবিধা (প্ল্যান অনুযায়ী)','নিজের সুবিধামতো সময়ে উপভোগ করা যায়','বিনোদনের জন্য আলাদা ঝামেলা থাকে না'],
-   creative:['ডিজাইন ও এডিটিংয়ের কাজ আরও প্রফেশনাল হয়','কাজের গতি বাড়ে','ক্লায়েন্ট প্রজেক্টে ভালো ফল পেতে সাহায্য করে','একই জায়গায় অনেক ক্রিয়েটিভ টুল পাওয়া যায়','নতুন আইডিয়া দ্রুত বাস্তবে রূপ দেওয়া যায়'],
-   prod:['অফিস ও প্রফেশনাল কাজ আরও গুছিয়ে করা যায়','প্রতিদিনের কাজে সময় বাঁচে','কাজের মান ও গতি দুটোই বাড়াতে সাহায্য করে','প্রফেশনাল কাজের জন্য নির্ভরযোগ্য টুল','কাজ নিয়ে দুশ্চিন্তা কমে'],
-   cloudVpn:['অনলাইনে বাড়তি গোপনীয়তার সুবিধা','পাবলিক Wi-Fi-তে ব্যবহারে বাড়তি নিরাপত্তা','বিভিন্ন দেশের সার্ভারে সংযোগের সুযোগ','নিশ্চিন্তে ডিজিটাল কাজ করা যায়','সীমা ও সুবিধা প্ল্যান অনুযায়ী'],
-   cloudStore:['ফাইল, ছবি ও ডকুমেন্ট এক জায়গায় গুছিয়ে রাখা যায়','ফোনের জায়গা খালি করতে সাহায্য করে','যেকোনো ডিভাইস থেকে ফাইল খোলা যায়','ফাইল শেয়ার করা সহজ হয়','স্টোরেজের সীমা প্ল্যান অনুযায়ী']
-  };
-  var BENG=['বাংলাদেশ থেকে সহজে অর্ডার করা যায়','অর্ডারের পরেও সাপোর্ট পাওয়া যায়','প্রয়োজনে সরাসরি যোগাযোগের সুবিধা'];
-  // ---- headings ----
-  var HEAD={
-   ben:['মূল সুবিধা','{n} ব্যবহারের সুবিধা','কী কী সুবিধা পাবেন','আপনার জন্য সুবিধা','মূল সুবিধাগুলো','কেন নেবেন'],
-   feat:['গুরুত্বপূর্ণ ফিচার','এক নজরে ফিচার','যা যা থাকছে','ফিচারসমূহ','প্রোডাক্টের ফিচার','মূল ফিচার'],
-   aud:['কাদের জন্য উপযোগী','যাঁরা ব্যবহার করতে পারেন','কারা উপকৃত হবেন','এটি কাদের জন্য','যাঁদের কাজে লাগবে'],
-   trust:['কেন {brand}-এ নেবেন','আমাদের সার্ভিস','ট্রাস্ট ও সার্ভিস','আমাদের সাথে যা পাবেন','সার্ভিস সম্পর্কে'],
-   cta:['অর্ডার করতে','অর্ডার ও বিস্তারিত জানতে','আজই যোগাযোগ করুন','যোগাযোগ','অর্ডার করতে যোগাযোগ']
-  };
-  var CTAL=['অর্ডার করতে বা বিস্তারিত জানতে এখনই মেসেজ করুন।','প্যাকেজ ও নিয়ম জানতে ইনবক্সে বা WhatsApp-এ যোগাযোগ করুন।','আজই মেসেজ করে অর্ডার কনফার্ম করুন।','কোনো প্রশ্ন থাকলে নির্দ্বিধায় মেসেজ করুন, আমরা বুঝিয়ে দেব।','দেরি না করে এখনই যোগাযোগ করুন।','অর্ডার করতে নিচের নম্বরে WhatsApp করুন বা পেজে ইনবক্স করুন।','সঠিক প্যাকেজ বেছে নিতে এখনই আমাদের সাথে কথা বলুন।','বিস্তারিত জানতে চাইলে ইনবক্সে মেসেজ দিন, দ্রুত উত্তর পাবেন।','অর্ডার দিতে চাইলে সরাসরি WhatsApp-এ মেসেজ করুন।','আপনার প্রয়োজনের কথা জানান, আমরা সাহায্য করব।','এখনই মেসেজ করুন, প্রশ্ন থাকলে জিজ্ঞেস করুন।','প্রোডাক্ট নিয়ে সব প্রশ্নের উত্তর দিতে আমরা প্রস্তুত।','অর্ডারের আগে প্যাকেজ ও শর্ত জেনে নিন, আমরা বুঝিয়ে দেব।','আজই যোগাযোগ করে আপনার Subscription নিশ্চিত করুন।'];
-  var WHYV={
-   'Genuine Subscription':['Genuine Subscription','Genuine সাবস্ক্রিপশন সার্ভিস'],
-   'দ্রুত অ্যাক্টিভেশন':['দ্রুত অ্যাক্টিভেশন','অ্যাক্টিভেশনে সহায়তা'],
-   'অর্ডারের পরেও সাপোর্ট':['অর্ডারের পরেও সাপোর্ট','অর্ডারের পরে সমস্যা হলে সাপোর্ট'],
-   'পরিষ্কার Terms & Conditions':['পরিষ্কার Terms & Conditions','অর্ডারের আগেই শর্ত পরিষ্কারভাবে জানানো হয়'],
-   'বাংলাদেশি ইউজারদের জন্য সহজ Payment Process':['বাংলাদেশি ইউজারদের জন্য সহজ Payment Process','সহজ Payment Process'],
-   'সমস্যা হলে Customer Support':['সমস্যা হলে Customer Support','Customer Support সুবিধা']
-  };
-  var MARKS=['✔','•','➤','◆','▪','→','✔','•','➤','◆'];
-  var KWL=['SEO কীওয়ার্ড:','কীওয়ার্ড:','জনপ্রিয় সার্চ:','যেভাবে সার্চ করা হয়:','সার্চ কীওয়ার্ড:','সম্পর্কিত কীওয়ার্ড:'];
   var CATKW={
    ai:['AI tools subscription BD','AI subscription Bangladesh','premium AI tools Bangladesh','AI chatbot subscription','AI টুল সাবস্ক্রিপশন বাংলাদেশ','AI সাবস্ক্রিপশন কিনুন'],
    edu:['online learning subscription Bangladesh','study tools subscription BD','student subscription Bangladesh','academic tools Bangladesh','পড়াশোনার টুল সাবস্ক্রিপশন','অনলাইন কোর্স সাবস্ক্রিপশন বাংলাদেশ'],
@@ -432,7 +436,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
    prod:['office software subscription BD','productivity tools Bangladesh','work tools subscription Bangladesh','software subscription Bangladesh','অফিস সফটওয়্যার সাবস্ক্রিপশন','সফটওয়্যার সাবস্ক্রিপশন বাংলাদেশ'],
    cloud:['cloud storage subscription BD','online security tools Bangladesh','VPN subscription Bangladesh','ক্লাউড স্টোরেজ সাবস্ক্রিপশন','অনলাইন নিরাপত্তা টুল বাংলাদেশ','ডিজিটাল সার্ভিস সাবস্ক্রিপশন']
   };
-  var CATTAG={ai:'AITools',edu:'OnlineLearning',ent:'OTT',creative:'CreativeTools',prod:'Productivity',cloud:'OnlineSecurity'};
+  var CATTAG={ai:'AITools',edu:'OnlineLearning',ent:'OTT',creative:'CreativeTools',prod:'Productivity',cloud:'OnlineSecurity',cloudStore:'CloudStorage',cloudVpn:'VPNService'};
   var LOCRE=/Bangladesh|\bBD\b|বাংলাদেশ|বিডি/i;
   function kwPool(c){
     var n=c.n,b=c.b,o=[];
@@ -448,76 +452,546 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   function hashPool(c){
     var n=c.n,slug=n.replace(/[^A-Za-z0-9]/g,''),bs=c.b.replace(/[^A-Za-z0-9]/g,'')||slug,tg=c.tagsBase||[],o=[];
     tg.forEach(function(t){o.push(t)});
-    [slug+'Bangladesh',slug+'BD',slug+'Subscription',slug+'Account',slug+'BuyBD',bs+'Bangladesh',bs+'Subscription',CATTAG[c.cat]||'DigitalSubscription','DigitalSubscriptionBD','SubscriptionBD','PremiumAccountBD','BangladeshiFreelancer'.slice(0,0)||'DigitalProductsBD','ডিজিটালসাবস্ক্রিপশন','সাবস্ক্রিপশন'].forEach(function(t){if(t)o.push(t)});
+    [slug+'Bangladesh',slug+'BD',slug+'Subscription',slug+'Account',slug+'BuyBD',bs+'Bangladesh',bs+'Subscription',CATTAG[c.pk]||CATTAG[c.cat]||'DigitalSubscription','DigitalSubscriptionBD','SubscriptionBD','PremiumAccountBD','BangladeshiFreelancer'.slice(0,0)||'DigitalProductsBD','ডিজিটালসাবস্ক্রিপশন','সাবস্ক্রিপশন'].forEach(function(t){if(t)o.push(t)});
     var seen={},out=[];o.forEach(function(t){var k=t.toLowerCase();if(t&&!seen[k]){seen[k]=1;out.push(t)}});
     return out;
   }
   function seoTitle(t,c){return t}
+  // ================= caption engine v4: natural prose, one angle per caption =================
+  function J(a){a=a.filter(Boolean);if(a.length<2)return a[0]||'';return a.slice(0,-1).join(', ')+' আর '+a[a.length-1]}
+  function fillc(s,c,x){
+    x=x||{};
+    return s.replace(/\{ns\}/g,c.ns||c.n)
+      .replace(/\{n\}/g,c.n).replace(/\{b\}/g,c.b||c.n).replace(/\{brand\}/g,c.brand).replace(/\{line\}/g,c.line)
+      .replace(/\{a1\}/g,x.a1||'').replace(/\{a2\}/g,x.a2||'').replace(/\{f1\}/g,x.f1||'').replace(/\{f2\}/g,x.f2||'').replace(/\{f3\}/g,x.f3||'');
+  }
   var NSTYLE=10;
-  // c: n,line,feats,aud,xtra,caveat,contact,brand,tagsBase(array),cat
+  var NOSUB={'Windows License Key':1};
+  // "we sell it" sentence (always present once)
+  var SELL=['আমরা {ns} বিক্রি করি, বাংলাদেশ থেকে সহজেই নিতে পারবেন।','{brand} থেকে {ns} নেওয়া যায়।','{ns} লাগলে আমাদের কাছে পাবেন।','আমাদের কাছে {ns} আছে।','{ns} এখন {brand}-এ পাওয়া যাচ্ছে।','যাঁরা {ns} কিনতে চান, তাঁদের জন্য আমরা আছি।','{brand}-এ {ns} বিক্রি হচ্ছে।','বাংলাদেশে {ns} কিনতে চাইলে আমাদের সাথে কথা বলুন।'];
+  // optional one-line seller note (only statements we can stand behind)
+  var SELLNOTE=['অর্ডারের আগে প্ল্যান আর শর্ত পরিষ্কার করে জানিয়ে দিই।','অর্ডারের পরে কিছু বুঝতে সমস্যা হলে মেসেজ করতে পারবেন।','কোন প্ল্যান কার কাজের জন্য ঠিক হবে, সেটাও বুঝিয়ে বলি।'];
+  var CTA={
+   soft:['অর্ডারের আগে প্ল্যান আর শর্ত জানতে চাইলে মেসেজ দিন।','কোন প্ল্যান আপনার জন্য ঠিক হবে, জানতে ইনবক্সে লিখুন।','আগ্রহ থাকলে WhatsApp-এ জানান, বুঝিয়ে বলব।','প্যাকেজ নিয়ে প্রশ্ন থাকলে সরাসরি মেসেজ করুন।','নিতে চাইলে বা কিছু জানার থাকলে মেসেজ করতে পারেন।','আপনার কোনটা লাগবে জানিয়ে দিলে আমরা দেখে বলে দেব।'],
+   direct:['অর্ডার করতে মেসেজ করুন।','অর্ডার দিতে সরাসরি WhatsApp করুন।','নিতে চাইলে এখনই ইনবক্স করুন।','অর্ডার করতে ইনবক্সে বা WhatsApp-এ জানান।']
+  };
+  var PROB={
+   ai:['রিপোর্ট, ইমেইল বা ক্লায়েন্টের মেসেজ লিখতে বসে প্রথম লাইনেই আটকে যান?','একই ধরনের কাজ বারবার করতে করতে দিনের অনেকটা সময় চলে যায়, তাই না?','ডেডলাইনের চাপে লেখা, রিসার্চ আর আইডিয়া—সব একসাথে সামলানো কঠিন হয়ে যায়।','ফ্রি ভার্সনে কাজের মাঝখানে লিমিট শেষ হয়ে গেলে খুব বিরক্ত লাগে।'],
+   edu:['পড়াশোনা বা স্কিল শেখার ভালো রিসোর্স খুঁজতেই অনেকটা সময় চলে যায়?','নিজের স্কিল বাড়াতে চান, কিন্তু কোথা থেকে শুরু করবেন বুঝে উঠছেন না?','পড়াশোনার পাশাপাশি অন্য কাজ সামলাতে গিয়ে নিয়মিত সময় দেওয়া কঠিন হয়ে যায়।'],
+   ent:['দিনের শেষে একটু ভালো কিছু দেখা বা শোনার ইচ্ছে হয়, অথচ ঝামেলা পিছু ছাড়ে না?','ছুটির দিনে পছন্দের কনটেন্ট এক জায়গায় পেলে মন্দ হয় না, তাই না?','বিনোদনের জন্য আলাদা আলাদা জায়গায় ঘুরতে ভালো লাগে না?'],
+   creative:['ক্লায়েন্টের ডেডলাইন আছে, কিন্তু ডিজাইন বা এডিটিংয়ের কাজের টুল ঠিকমতো হাতে নেই?','ফ্রি ভার্সনের সীমাবদ্ধতায় কাজ বারবার আটকে যায়?','প্রতিটা কাজ শুরু থেকে বানাতে বানাতে সময় ফুরিয়ে যায়।'],
+   prod:['অফিসের কাজ, ফাইল আর মিটিং—সব সামলাতে গিয়ে সময় কম পড়ে?','ক্লায়েন্ট বা টিমের সাথে কাজ গুছিয়ে করার ঠিকঠাক টুল পাচ্ছেন না?','প্রফেশনাল কাজে প্রিমিয়াম টুল না থাকলে বারবার আটকে যেতে হয়।'],
+   cloudVpn:['পাবলিক Wi-Fi-তে অফিসের কাজ বা ব্যাংকিং করতে গেলে নিরাপত্তা নিয়ে খুঁতখুঁত লাগে?','অনলাইনে একটু বাড়তি প্রাইভেসি দরকার, কিন্তু কোন সার্ভিস নেবেন বুঝতে পারছেন না?'],
+   cloudStore:['ফোনের স্টোরেজ ফুল, আর নতুন ছবি তোলার জায়গা নেই?','ফাইল আর ছবি এখানে-ওখানে ছড়িয়ে আছে, দরকারের সময় খুঁজে পাওয়া যায় না?']
+  };
+  var PPROB={
+   'Duolingo Super':['ইংরেজি বা অন্য কোনো ভাষা শেখার ইচ্ছে আছে, কিন্তু নিয়মিত অনুশীলনের সুযোগ হয় না?','অ্যাপে শেখার সময় বারবার বিজ্ঞাপন এসে মনোযোগ নষ্ট করে?'],
+   'QuillBot Premium':['ইংরেজিতে লিখে ফেলেছেন, কিন্তু বাক্যগঠন আর grammar নিয়ে খুঁতখুঁত থেকে যায়?','লেখা জমা দেওয়ার আগে ভাষা ঠিক করতে গিয়ে অনেক সময় চলে যায়?'],
+   'Grammarly Premium':['ইংরেজিতে লিখে ফেলেছেন, কিন্তু grammar আর spelling নিয়ে খুঁতখুঁত থেকে যায়?','ইমেইল বা অ্যাসাইনমেন্ট পাঠানোর আগে ভুল ধরার জন্য আরেকজনকে খুঁজতে হয়?'],
+   'Paperpal Premium':['গবেষণাপত্র বা থিসিস লিখে ফেলেছেন, কিন্তু একাডেমিক ভাষা নিয়ে ভরসা পাচ্ছেন না?','জার্নালে পাঠানোর আগে ভাষা ঠিক করতে গিয়ে অনেক সময় চলে যায়?'],
+   'Turnitin Instructor':['শিক্ষার্থীদের জমা দেওয়া লেখার মিল হাতে-কলমে যাচাই করা সময়সাপেক্ষ কাজ, তাই না?'],
+   'Coursera Plus':['চাকরির বাজারে এগিয়ে থাকতে নতুন স্কিল দরকার, কিন্তু কোথা থেকে শুরু করবেন বুঝতে পারছেন না?'],
+   'Udemy Business':['কাজের জন্য নতুন স্কিল শিখতে চান, কিন্তু কোন কোর্স নেবেন ঠিক করতে পারছেন না?'],
+   'Chegg':['পড়তে বসে কোনো প্রশ্নের ব্যাখ্যা না পেলে আটকে যান?'],
+   'HeyGen':['ভিডিও বানাতে ক্যামেরা, স্টুডিও আর সময়—সব জোগাড় করা ঝামেলার মনে হয়?'],
+   'ElevenLabs Creator':['ভিডিও বা কনটেন্টের জন্য ভালো voiceover দরকার, কিন্তু নিজে রেকর্ড করার সুযোগ নেই?'],
+   'Higgsfield Pro':['ছোট একটা ভিডিও ক্লিপের জন্য শুটিং আর এডিটিংয়ে অনেক সময় চলে যায়?'],
+   'Lovable Pro':['একটা ওয়েবসাইট বা অ্যাপের আইডিয়া আছে, কিন্তু কোড লেখার সময় বা দক্ষতা নেই?'],
+   'Cursor AI Pro':['কোড লিখতে আর ডিবাগ করতে গিয়ে ঘণ্টার পর ঘণ্টা চলে যায়?'],
+   'Gamma Pro':['প্রেজেন্টেশনের কনটেন্ট তৈরি আছে, কিন্তু স্লাইডের ডিজাইন নিয়ে আটকে যান?'],
+   'StealthWriter':['AI দিয়ে লেখানো খসড়া পড়তে কেমন যেন যান্ত্রিক লাগে?'],
+   'Spotify Premium':['গান শোনার মাঝখানে বিজ্ঞাপন এসে মুড নষ্ট করে?'],
+   'YouTube Premium':['ভিডিও দেখার মাঝখানে বারবার বিজ্ঞাপন এসে বিরক্ত করে?'],
+   'CapCut Pro':['Reels বা Shorts এডিট করতে গিয়ে ফ্রি ভার্সনের সীমাবদ্ধতায় আটকে যান?'],
+   'Freepik Premium':['ডিজাইনের জন্য ভালো ছবি, ভেক্টর বা টেমপ্লেট খুঁজতে অনেক সময় চলে যায়?'],
+   'Envato Elements':['ডিজাইন বা ভিডিওর জন্য টেমপ্লেট আর অ্যাসেট খুঁজতে খুঁজতে সময় ফুরিয়ে যায়?'],
+   'Figma Pro':['একটা ডিজাইন নিয়ে একাধিক জনের সাথে কাজ করতে গিয়ে ফাইল গোলমাল হয়ে যায়?'],
+   'Zoom Pro':['অনলাইন মিটিং বা ক্লাস নিতে গিয়ে ফ্রি প্ল্যানের সীমাবদ্ধতা বিরক্ত করে?'],
+   'Google Meet':['অনলাইন মিটিং বা ক্লাসের জন্য একটা গোছানো ব্যবস্থা দরকার?'],
+   'Windows License Key':['স্ক্রিনে "Activate Windows" লেখাটা চোখে লেগে থাকছে?'],
+   'LinkedIn Premium':['চাকরি খুঁজতে বা নতুন যোগাযোগ বাড়াতে LinkedIn-এ আরেকটু বাড়তি সুবিধা দরকার?']
+  };
+  var BN2={
+   ai:['লেখা আর রিসার্চের মতো কাজে সময় কিছুটা বাঁচে','কাজ শুরু করার জড়তা কমে, প্রথম খসড়াটা তাড়াতাড়ি পেয়ে যান','একই ধরনের কাজ বারবার করার ঝামেলা কমে'],
+   edu:['নিজের গতিতে শেখা যায়','পড়াশোনার ফাঁকে সময় বুঝে ব্যবহার করা যায়','রিসোর্স খোঁজার ঝামেলা কমে'],
+   ent:['ছুটির দিনে বা কাজের পরে পছন্দের কনটেন্ট সহজে পাওয়া যায়','বিনোদনের জন্য আলাদা আলাদা জায়গায় ঘুরতে হয় না'],
+   creative:['প্রিমিয়াম টুল হাতের কাছে থাকায় ক্লায়েন্টের কাজে সময় বাঁচে','ফ্রি ভার্সনের সীমাবদ্ধতা নিয়ে ভাবতে হয় না'],
+   prod:['অফিস বা ক্লায়েন্টের কাজ গুছিয়ে করা সহজ হয়','ফাইল আর মিটিং নিয়ে ঝামেলা কমে'],
+   cloudVpn:['পাবলিক Wi-Fi-তে কাজ করলে বাড়তি নিরাপত্তার একটা স্তর পান','অনলাইনে বাড়তি প্রাইভেসি পেতে সাহায্য করে'],
+   cloudStore:['ফোনের জায়গা খালি রাখা সহজ হয়','ফাইল আর ছবি এক জায়গায় গোছানো থাকে']
+  };
+  // hand-written angles for the most requested products (each one a different angle)
+  var PA={
+   'Google One':[
+    'ফোনে "Storage almost full" লেখা আসছে, আর নতুন ছবি তুলতে গেলেই জায়গা নেই?\n\nছবি আর ভিডিও Google Photos-এ ব্যাকআপ রাখলে ফোনের জায়গা অনেকটা খালি করা যায়। {n}-এর মাধ্যমে প্ল্যান অনুযায়ী বাড়তি স্টোরেজ নিলে সেই ব্যাকআপ নিয়ে আর ঝামেলা থাকে না।',
+    'Gmail আর Google Drive-এর জায়গা ভরে গেলে নতুন ইমেইল আসাও সমস্যা হতে পারে। পুরোনো মেইল আর বড় অ্যাটাচমেন্ট ডিলিট করতে করতে বিরক্ত হয়ে গেলে {n} নিয়ে স্টোরেজ বাড়িয়ে নিতে পারেন।\n\nডিলিট না করেই কাজ চালানো যায়, আর দরকারি ফাইল হাতের কাছেই থাকে।',
+    'ক্লায়েন্টের ফাইল, নিজের ডকুমেন্ট, প্রেজেন্টেশন—সব ল্যাপটপে রাখলে ঝুঁকি থেকেই যায়। Google Drive-এ রাখলে ফোন বা ল্যাপটপ, যেটা হাতে থাকে সেখান থেকেই ফাইল খোলা যায়। ফোল্ডার শেয়ার করে অন্যদের সাথে কাজও করা যায়।\n\nঅতিরিক্ত জায়গা দরকার হলে {n} একটা সহজ উপায়।',
+    'ফোন হারিয়ে গেলে বা নষ্ট হলে সবচেয়ে বেশি আফসোস হয় ছবিগুলোর জন্য। Google Photos-এ ব্যাকআপ চালু রাখলে সেই ঝুঁকি কমে, কিন্তু ব্যাকআপের জন্যও তো জায়গা লাগে।\n\nসেই জায়গার জন্যই {n}।',
+    '{n} Subscription লাগলে আমাদের কাছে পাবেন।\n\nফাইল, ছবি আর ভিডিও রাখার জায়গা বাড়ান, Gmail-এর জন্যও থাকবে বাড়তি স্পেস।'],
+   'ChatGPT':[
+    'রিপোর্ট, ইমেইল বা ক্লায়েন্টকে পাঠানোর মেসেজ—প্রথম লাইনটা লিখতেই অনেক সময় চলে যায়। {n} দিয়ে একটা খসড়া দাঁড় করিয়ে নিয়ে নিজের মতো ঠিক করে নিলে কাজ দ্রুত এগোয়।\n\nলেখালেখি, ইমেইল আর কনটেন্ট তৈরিতে এটা সাহায্য করে।',
+    'অ্যাসাইনমেন্ট বা রিসার্চের সময় কোনো টপিক বুঝতে না পারলে বারবার সার্চ করতে হয়। {n}-এ প্রশ্ন করে ধাপে ধাপে বুঝে নেওয়া যায়। উত্তরগুলো যাচাই করে নেওয়ার দায়িত্বটা অবশ্য আপনার।\n\nপড়াশোনা আর গবেষণার প্রশ্নে স্টুডেন্টদের কাজে আসে।',
+    'কোড চলছে না, কিন্তু ভুলটা কোথায় বুঝতে পারছেন না? {n}-কে কোডটা দেখালে সমস্যা খুঁজে বের করতে আর নতুন কোড লিখতে সাহায্য পেতে পারেন।\n\nডেভেলপার আর ফ্রিল্যান্সারদের কাজের জন্য ভালো একটা সহায়ক।',
+    'কোনো ফাইল বা ছবি দেখে তার সারাংশ বা বিশ্লেষণ দরকার? {n}-এ প্ল্যান অনুযায়ী ফাইল ও ছবি বিশ্লেষণ করা যায়।\n\nকোন প্ল্যানে কী পাবেন, অর্ডারের আগে আমরা জানিয়ে দেব।',
+    '{n} Subscription এখন আমাদের কাছে পাওয়া যাচ্ছে।\n\nলেখা, কোডিং, পড়াশোনা আর গবেষণার কাজে ব্যবহার করতে পারবেন।'],
+   'Claude Pro':[
+    'লম্বা রিপোর্ট বা ডকুমেন্ট পড়ে সারাংশ বের করার সময় নেই? {n}-এ ডকুমেন্ট ও ফাইল বিশ্লেষণ করা যায়, তাই মূল পয়েন্টগুলো দ্রুত বের করে নিতে পারেন।',
+    'আর্টিকেল, রিপোর্ট বা ইমেইল লিখতে গিয়ে ভাষা গোছাতে পারছেন না? {n}-এর সাহায্যে খসড়া লিখিয়ে নিয়ে নিজের মতো এডিট করে নিতে পারেন।',
+    'প্রোগ্রামিং করতে গিয়ে আটকে গেলে {n} কোড লিখতে আর ডিবাগ করতে সাহায্য করে। কোডটা দিয়ে জিজ্ঞেস করুন, সমস্যাটা কোথায়।',
+    'একই ধরনের কাজ বারবার করতে হলে প্রতিবার নতুন করে সব বুঝিয়ে বলা বিরক্তিকর। {n}-এর Projects ফিচারে কাজ গুছিয়ে রাখা যায়, ফলে একটা প্রজেক্টের ফাইল আর নির্দেশনা এক জায়গায় থাকে।',
+    '{n} Subscription লাগলে আমাদের কাছে পাবেন।\n\nFree প্ল্যানের চেয়ে বেশি ব্যবহার করতে চাইলে কাজে আসবে।'],
+   'Netflix Premium':[
+    'ছুটির দিনে ঘরে বসে ভালো একটা সিরিজ বা সিনেমা দেখার ইচ্ছে থাকলে {n}-এ পাবেন নানা ধরনের সিনেমা, সিরিজ আর ডকুমেন্টারি। সাথে Netflix Originals তো আছেই।',
+    'যাতায়াতের সময় বা নেট খারাপ থাকলে অফলাইনে দেখার জন্য ডাউনলোড করে রাখা যায়, তবে সব কনটেন্টে এটা সমর্থিত নয়। স্মার্টফোন, টিভি বা কম্পিউটার—যেটাতে সুবিধা, সেটাতেই দেখুন।',
+    'নতুন একটা সিরিজ নিয়ে সবাই কথা বলছে, কিন্তু আপনার দেখা হয়নি? Netflix Originals-এর সিরিজ আর সিনেমা এক জায়গাতেই পাবেন।',
+    'পরিবারের সবাই মিলে দেখার মতো কিছু খুঁজছেন? সিনেমা, সিরিজ আর ডকুমেন্টারি, সবকিছুর জন্য একটা Subscription। ভিডিও কোয়ালিটি আর একসঙ্গে কয়টা ডিভাইসে দেখা যাবে, তা প্ল্যান ও শর্তের ওপর নির্ভর করে।',
+    '{n} Subscription লাগলে আমাদের কাছে পাবেন।\n\nসিনেমা, সিরিজ আর Netflix Originals—পছন্দের কনটেন্ট এক জায়গায়।'],
+   'Microsoft 365':[
+    'অ্যাসাইনমেন্ট, প্রেজেন্টেশন আর রিপোর্টের জন্য Word, Excel, PowerPoint তিনটাই লাগে। {n}-এ এই অ্যাপগুলো পাবেন, সাথে OneDrive-এ ফাইল রাখার জায়গাও।',
+    'হিসাব রাখা, ইনভয়েস বানানো বা ক্লায়েন্টকে প্রপোজাল পাঠানো—ছোট ব্যবসার এসব কাজে Excel, Word আর Outlook দরকার হয়। এগুলো একসাথে পেতে {n}।',
+    'ইমেইল, ক্যালেন্ডার আর ফাইল সব আলাদা জায়গায় থাকলে গোছানো কঠিন। Outlook-এ মেইল ও ক্যালেন্ডার, OneDrive-এ ক্লাউড স্টোরেজ, সবই {n}-এ পাবেন।',
+    'একটা ফাইল নিয়ে একাধিক জনকে কাজ করতে হলে বারবার ইমেইলে পাঠানোর ঝামেলা। ফাইল শেয়ার করে একসঙ্গে কাজ করার সুবিধা {n}-এ আছে।',
+    '{n} লাগলে আমাদের কাছে পাবেন।\n\nWord, Excel, PowerPoint আর Outlook, অফিসের দরকারি অ্যাপগুলো এক জায়গায়।']
+  };
+  // generic angles: each returns [paragraphs]; chosen by sequence so consecutive captions differ in angle
+  var GEN={
+   prob:function(c,r,x){return[pk(r,PPROB[c.n]||PROB[c.pk]),pk(r,['এমন ঝামেলায় {n} সাহায্য করতে পারে। যেমন: '+J([x.f1,x.f2,x.f3])+'।','{n}-এ পাচ্ছেন '+J([x.f1,x.f2,x.f3])+'।'])]},
+   use:function(c,r,x){return[pk(r,['{n} মানে {line}।','সংক্ষেপে, {n} হলো {line}।']),'সুবিধার মধ্যে আছে '+x.f1+' আর '+x.f2+'।']},
+   aud:function(c,r,x){return[pk(r,['{n} বিশেষভাবে কাজে আসতে পারে এঁদের: {a1}; {a2}।','যাঁদের জন্য {n} ভালো একটা অপশন: {a1}; {a2}।']),pk(r,['যেমন, '+x.f1+'।','সুবিধার মধ্যে: '+x.f1+', '+x.f2+'।'])]},
+   feat:function(c,r,x){return[pk(r,['{n}-এ কী কী পাচ্ছেন?','{n} নিলে যা যা থাকছে:']),'• '+x.f1+'\n• '+x.f2+'\n• '+x.f3]},
+   conv:function(c,r,x){return[pk(r,['অনেকেই জিজ্ঞেস করেন, {n} আসলে কী কাজে লাগে?','{n} নিয়ে প্রায়ই প্রশ্ন আসে, তাই একটু সহজ করে বলি।']),'সোজা কথায়: {line}। '+pk(r,['যেমন '+x.f1+', কিংবা '+x.f2+'।','এর মধ্যে আছে '+x.f1+' আর '+x.f2+'।'])]},
+   ben:function(c,r,x){var b=shuf(r,BN2[c.pk]||BN2.prod);return[b[0]+(b[1]?'। '+b[1]+'।':'।'),'{n}-এ '+J([x.f1,x.f2])+' পাবেন।']},
+   edu:function(c,r,x){return['{n} নেওয়ার আগে একটা কথা জেনে রাখুন: '+c.caveat.replace(/[।.]+$/,'')+'।','সুবিধার মধ্যে আছে '+x.f1+' আর '+x.f2+'। নেওয়ার আগে প্ল্যানটা নিজের প্রয়োজনের সাথে মিলিয়ে নিন।']},
+   mini:function(c,r,x){return[J([x.f1,x.f2,x.f3])+'—'+pk(r,['এসব নিয়েই {n}।','এই সুবিধাগুলো নিয়েই {n}।'])]}
+  };
+  var GKEYS=['prob','use','aud','feat','conv','ben','edu','mini'];
+  function pcat(c){return c.cat==='cloud'?(/VPN/i.test(c.n)?'cloudVpn':'cloudStore'):c.cat}
   function caption(style,idx,salt,c,dt,pi){
     var r=mkRng((pi+1)*1000003+idx*7919+salt*104729+style*31+17);
-    var cc=Object.assign({},c);cc.b=baseOf(c.n);
-    var mark=MARKS[style%MARKS.length];
-    // 1. hook
-    var gs=(c.cat==='ent')?['q','d','t']:HGROUPS,g=gs[(style+Math.floor(r()*5))%gs.length],hp=HOOK[g].concat(HOOKC[c.cat]||[]).filter(function(h){return h.indexOf('{n}')>=0});
-    var hook=fill(pk(r,hp),cc);
-    // 2. introduction
-    var intro=[fill(pk(r,INTRO),cc)],i2=pk(r,INTRO2);if(i2)intro.push(fill(i2,cc));
-    // 3. benefits
-    var bk=c.cat==='cloud'?(/VPN/i.test(c.n)?'cloudVpn':'cloudStore'):c.cat,bp=shuf(r,BEN[bk]||BEN.prod),nb=3+Math.floor(r()*2);
-    var ben=bp.slice(0,nb);if(r()<0.4)ben[ben.length-1]=pk(r,BENG);
-    // 4. features (5-7 where the product data allows)
-    var pool=c.feats.concat(c.xtra||[]);
-    if(pool.length<5)pool=pool.concat(['প্ল্যান অনুযায়ী আরও সুবিধা, বিস্তারিত ইনবক্সে জানুন']);
-    var fc=Math.min(pool.length,5+Math.floor(r()*3)),feats=shuf(r,pool).slice(0,fc);
-    if(r()<0.5){feats=pool.filter(function(x){return feats.indexOf(x)>=0})}
-    // 5. audience
-    var au=shuf(r,c.aud).slice(0,3+Math.floor(r()*2));
-    // 6. trust & service
-    var why=[c.why0].concat(shuf(r,c.whyRest)).slice(0,3+Math.floor(r()*2)).map(function(w){return WHYV[w]?pk(r,WHYV[w]):w});
-    var L=[hook,''];
-    L=L.concat(intro,['']);
-    L.push(fill(pk(r,HEAD.ben),cc)+':');L=L.concat(bl(ben,mark),['']);
-    L.push(fill(pk(r,HEAD.feat),cc)+':');L=L.concat(bl(feats,mark),['']);
-    L.push(fill(pk(r,HEAD.aud),cc)+':');L=L.concat(bl(au,mark),['']);
-    L.push(fill(pk(r,HEAD.trust),cc)+':');L=L.concat(bl(why,mark));
-    L.push('বিঃদ্রঃ '+c.caveat,'');
-    L.push(pk(r,CTAL));
-    L.push(cc.contact,'');
-    // 9. SEO keywords (15-20), 10. hashtags (8-10) together at the end
-    var kp=shuf(r,kwPool(cc)),kn=10+Math.floor(r()*3),kws=kp.slice(0,kn);
-    if(!kws.some(function(k){return k===c.n+' Subscription Bangladesh'||k===c.n+' Subscription BD'}))kws[kws.length-1]=c.n+' Subscription Bangladesh';
-    L.push(pk(r,KWL)+' '+kws.join(', '),'');
-    var hp2=hashPool(cc),brandTag=(c.brand||'').replace(/[^A-Za-z0-9]/g,'')||'LearnoryDigital',slug=c.n.replace(/[^A-Za-z0-9]/g,'');
-    var must=[hp2[0],slug+'Bangladesh'],rest=shuf(r,hp2.filter(function(t){return must.indexOf(t)<0&&t!==brandTag})),hn=10+Math.floor(r()*3);
-    var tl=must.concat(rest).filter(function(t,j,a){return t&&a.indexOf(t)===j}).slice(0,hn-1);tl.push(brandTag);
-    L.push(tl.map(function(t){return '#'+t}).join(' '));
-    var out=[],blank=true;
-    L.forEach(function(x){
-      if(x===''){if(!blank){out.push('');blank=true}}
-      else{out.push(x);blank=false}
-    });
-    while(out.length&&out[out.length-1]==='')out.pop();
-    return out.join('\n');
+    var cc=Object.assign({},c);cc.b=baseOf(c.n);cc.pk=pcat(c);cc.ns=NOSUB[c.n]?c.n:c.n+' Subscription';
+    var pool=c.feats.concat(c.xtra||[]),fs=shuf(r,pool),x={f1:fs[0],f2:fs[1]||fs[0],f3:fs[2]||fs[1]||fs[0]};
+    var au=shuf(r,c.aud);x.a1=au[0];x.a2=au[1]||au[0];
+    var ov=PA[c.n]||[],kinds=GKEYS.filter(function(k){return !(k==='ben'&&PPROB[c.n])&&!(c.pk==='ent'&&(k==='conv'||k==='edu'))});
+    ov.forEach(function(_,i){kinds.push('ov'+i)});
+    var blk=Math.floor(idx/kinds.length),seq=shuf(mkRng((pi+1)*7777+blk*131+5),kinds),kind=seq[idx%kinds.length],paras;
+    if(kind.indexOf('ov')===0)paras=fillc(ov[+kind.slice(2)],cc,x).split('\n\n');
+    else paras=GEN[kind](cc,r,x).map(function(t){return fillc(t,cc,x)});
+    var short=kind==='mini'||kind==='ov4';
+    // "we sell it" sentence: early for short styles, otherwise after the opening paragraph
+    var sell=fillc(pk(r,SELL),cc),out=paras.slice();
+    if(kind!=='ov4'){
+      if(short)out.unshift(sell);else out.splice(Math.min(1,out.length),0,sell);
+    }
+    var ctaK=(NOSUB[c.n]||kind==='mini'||kind==='ov4'||r()<0.3)?'direct':'soft';
+    if(!short&&!NOSUB[c.n]&&ctaK==='direct'&&r()<0.5)out.push(pk(r,SELLNOTE));
+    if(kind!=='edu')out.push('বিঃদ্রঃ '+c.caveat);
+    out.push(pk(r,CTA[ctaK]));
+    var L=out.join('\n\n')+'\n\n'+cc.contact;
+    var tn=S.tags==null?10:S.tags;
+    if(tn>0){
+      var hp2=hashPool(cc),brandTag=(c.brand||'').replace(/[^A-Za-z0-9]/g,'')||'LearnoryDigital',slug=c.n.replace(/[^A-Za-z0-9]/g,'');
+      var must=[hp2[0],slug+'Bangladesh'],rest=shuf(r,hp2.filter(function(t){return must.indexOf(t)<0&&t!==brandTag}));
+      var tl=must.concat(rest).filter(function(t,j,a){return t&&a.indexOf(t)===j}).slice(0,tn-1);tl.push(brandTag);
+      L+='\n\n'+tl.map(function(t){return '#'+t}).join(' ');
+    }
+    return L;
   }
-  // SEO self-check for a finished caption
+  // separate SEO keyword list (kept out of the post text)
+  function seoWords(c,idx,pi){
+    var r=mkRng((pi+1)*91+idx*13+3),cc=Object.assign({},c);cc.b=baseOf(c.n);
+    var kp=shuf(r,kwPool(cc)),kn=10+Math.floor(r()*3),kws=kp.slice(0,kn);
+    if(kws.indexOf(c.n+' Subscription Bangladesh')<0)kws[kws.length-1]=c.n+' Subscription Bangladesh';
+    return kws.join(', ');
+  }
   function seoCheck(text,c){
-    var w=[],lines=text.split('\n'),first=lines[0]||'',head=text.slice(0,125),n=c.n;
+    var w=[],n=c.n,first=text.split('\n\n').slice(0,2).join(' ');
     if(first.indexOf(n)<0)w.push('seo-title');
-    if(head.indexOf(n)<0)w.push('seo-first');
     if(!LOCRE.test(text))w.push('seo-loc');
-    var cnt=text.split(n).length-1;if(cnt<2)w.push('seo-count');
-    var last=lines[lines.length-1]||'',tags=(last.match(/#[^\s#]+/g)||[]).length;if(tags<10||tags>12)w.push('seo-tags');
-    var kl=lines[lines.length-3]||'',km=kl.split(': ').slice(1).join(': ').split(', ').length;
-    if(km<10||km>12)w.push('seo-kw');
     if(/https?:\/\/|www\./i.test(text))w.push('seo-link');
-    if(text.split(/\s+/).length<90)w.push('seo-len');
+    if(!/বিক্রি|কিনতে|কিনুন|পাবেন|পাওয়া যাচ্ছে|নেওয়া যায়|আছে/.test(text))w.push('sell');
+    var last=text.split('\n').pop(),tags=(last.match(/#[^\s#]+/g)||[]).length,tn=S.tags==null?10:S.tags;
+    if(tn>0&&tags!==tn)w.push('seo-tags');
+    if(text.split(/\s+/).length<40)w.push('seo-len');
     return w;
   }
   function altText(c,feats,wa){
     return c.n+' Subscription Bangladesh-এর পোস্টার: '+feats.slice(0,4).join(', ')+'। '+c.brand+(wa?', WhatsApp '+wa:'')+'।';
   }
+  // ---------- posters: canvas layouts + logo store ----------
+  var PW=1080,PH=1350,FONT='"Hind Siliguri","Noto Sans Bengali","Noto Sans",system-ui,sans-serif';
+  var LOGOS={},LOGOIMG={};
+  var LDB=null;
+  function ldb(cb){
+    if(LDB)return cb(LDB);
+    try{
+      var rq=indexedDB.open('learnory-logos',1);
+      rq.onupgradeneeded=function(){rq.result.createObjectStore('l')};
+      rq.onsuccess=function(){LDB=rq.result;cb(LDB)};
+      rq.onerror=function(){cb(null)};
+    }catch(e){cb(null)}
+  }
+  function logoLoadAll(done){
+    ldb(function(db){
+      if(!db)return done();
+      try{
+        var st=db.transaction('l').objectStore('l'),rq=st.openCursor();
+        rq.onsuccess=function(){
+          var cu=rq.result;
+          if(cu){LOGOS[cu.key]=cu.value;cu.continue()}
+          else{
+            var keys=Object.keys(LOGOS),left=keys.length;
+            if(!left)return done();
+            keys.forEach(function(k){var im=new Image();im.onload=im.onerror=function(){LOGOIMG[k]=im.width?im:null;if(--left===0)done()};im.src=LOGOS[k]});
+          }
+        };
+        rq.onerror=function(){done()};
+      }catch(e){done()}
+    });
+  }
+  function logoPut(key,url,cb){
+    LOGOS[key]=url;var im=new Image();
+    im.onload=function(){LOGOIMG[key]=im;cb&&cb()};im.src=url;
+    ldb(function(db){if(db)try{db.transaction('l','readwrite').objectStore('l').put(url,key)}catch(e){}});
+  }
+  function logoDel(key){
+    delete LOGOS[key];delete LOGOIMG[key];
+    ldb(function(db){if(db)try{db.transaction('l','readwrite').objectStore('l').delete(key)}catch(e){}});
+  }
+  // shrink an uploaded picture to max 700px and keep transparency (PNG)
+  function readLogoFile(file,cb){
+    var rd=new FileReader();
+    rd.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var m=Math.max(im.width,im.height),k=m>700?700/m:1,cv=document.createElement('canvas');
+        cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));
+        cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+        cb(cv.toDataURL('image/png'));
+      };
+      im.onerror=function(){cb(null)};
+      im.src=rd.result;
+    };
+    rd.onerror=function(){cb(null)};
+    rd.readAsDataURL(file);
+  }
+
+  // ---- palettes ----
+  var PAL=[
+   {n:'emerald',dark:1,c1:'#04261E',c2:'#0C7A63',ac:'#F6C945',ink:'#FFFFFF',sub:'#BFE9DC',card:'#FFFFFF',ci:'#0B3B2E'},
+   {n:'navy',dark:1,c1:'#0A1B36',c2:'#1B4286',ac:'#FFC53D',ink:'#FFFFFF',sub:'#C5D5F2',card:'#FFFFFF',ci:'#0A1B36'},
+   {n:'violet',dark:1,c1:'#25104F',c2:'#6A35D6',ac:'#FF8FC2',ink:'#FFFFFF',sub:'#DCCBFF',card:'#FFFFFF',ci:'#25104F'},
+   {n:'sunset',dark:1,c1:'#D9431C',c2:'#A3124F',ac:'#FFE08A',ink:'#FFFFFF',sub:'#FFD9C9',card:'#FFFFFF',ci:'#4A0F1F'},
+   {n:'mint',dark:0,c1:'#E7F6F0',c2:'#C9ECDF',ac:'#0C7A63',ink:'#08342A',sub:'#3F6B5F',card:'#FFFFFF',ci:'#08342A'},
+   {n:'cream',dark:0,c1:'#FFF3E0',c2:'#FFDDB0',ac:'#E8590C',ink:'#3A1B00',sub:'#7A4A1E',card:'#FFFFFF',ci:'#3A1B00'},
+   {n:'ember',dark:1,c1:'#101010',c2:'#3A0D0D',ac:'#FF4D4D',ink:'#FFFFFF',sub:'#E0C4C4',card:'#FFFFFF',ci:'#1A1A1A'},
+   {n:'ocean',dark:1,c1:'#04394F',c2:'#1594B5',ac:'#FFD166',ink:'#FFFFFF',sub:'#CBEFF7',card:'#FFFFFF',ci:'#04394F'},
+   {n:'sky',dark:0,c1:'#EAF2FF',c2:'#CFE0FF',ac:'#2563EB',ink:'#0A2358',sub:'#44609A',card:'#FFFFFF',ci:'#0A2358'},
+   {n:'wine',dark:1,c1:'#3A0A1E',c2:'#80133E',ac:'#F5C26B',ink:'#FFFFFF',sub:'#EFC9D6',card:'#FFFFFF',ci:'#3A0A1E'}
+  ];
+  var HEADS=[
+   function(b){return b+' Subscription এখন বাংলাদেশে'},
+   function(b){return 'প্রিমিয়াম '+b+', সহজ অর্ডার'},
+   function(b){return b+' নিন, কাজ হোক সহজ'},
+   function(b){return b+' Subscription কিনুন আজই'},
+   function(b){return 'আপনার '+b+' Subscription এখানে'},
+   function(b){return b+' লাগবে? আমাদের কাছে আছে'},
+   function(b){return b+' Subscription অর্ডার চলছে'},
+   function(b){return 'বাংলাদেশে '+b+' Subscription'}
+  ];
+  var NSTRUCT=8;
+
+  // ---- drawing helpers ----
+  function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+  function fnt(w,s){return w+' '+s+'px '+FONT}
+  function wrap(g,text,maxW){
+    var words=text.split(/\s+/),lines=[],cur='';
+    words.forEach(function(w){
+      var t=cur?cur+' '+w:w;
+      if(g.measureText(t).width<=maxW||!cur)cur=t;else{lines.push(cur);cur=w}
+    });
+    if(cur)lines.push(cur);
+    return lines;
+  }
+  // best font size so that the text fits in maxLines lines of width maxW
+  function fit(g,text,maxW,maxLines,s0,s1,wt){
+    for(var s=s0;s>=s1;s-=2){
+      g.font=fnt(wt,s);var L=wrap(g,text,maxW);
+      var okw=L.every(function(l){return g.measureText(l).width<=maxW+1});
+      if(L.length<=maxLines&&okw)return{s:s,L:L};
+    }
+    g.font=fnt(wt,s1);var L2=wrap(g,text,maxW);
+    if(L2.length>maxLines){L2=L2.slice(0,maxLines);L2[maxLines-1]=L2[maxLines-1].replace(/[\s,]*\S*$/,'')+'…'}
+    return{s:s1,L:L2};
+  }
+  function textBlock(g,t,x,y,maxW,maxLines,s0,s1,wt,color,align,lh){
+    var f=fit(g,t,maxW,maxLines,s0,s1,wt);
+    g.font=fnt(wt,f.s);g.fillStyle=color;g.textAlign=align||'left';g.textBaseline='alphabetic';
+    var step=Math.round(f.s*(lh||1.28)),yy=y+f.s;
+    f.L.forEach(function(l,i){g.fillText(l,x,yy+i*step)});
+    return{h:f.L.length*step,s:f.s,n:f.L.length};
+  }
+  function circle(g,x,y,r,fill){g.beginPath();g.arc(x,y,r,0,7);g.fillStyle=fill;g.fill()}
+  function alpha(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'}
+  function bgGrad(g,p,ang){
+    var x2=ang?PW:0,y2=PH,gr=g.createLinearGradient(0,0,x2,y2);gr.addColorStop(0,p.c1);gr.addColorStop(1,p.c2);
+    g.fillStyle=gr;g.fillRect(0,0,PW,PH);
+  }
+  function dots(g,x,y,cols,rows,gap,r,col){for(var i=0;i<cols;i++)for(var j=0;j<rows;j++)circle(g,x+i*gap,y+j*gap,r,col)}
+  function tick(g,cx,cy,s,col){g.strokeStyle=col;g.lineWidth=Math.max(4,s/6);g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(cx-s*.32,cy+s*.02);g.lineTo(cx-s*.08,cy+s*.27);g.lineTo(cx+s*.34,cy-s*.22);g.stroke()}
+
+  // logo card: white card, logo fitted inside (or the product name as text when no logo uploaded)
+  function logoCard(g,o,x,y,w,h,p,shadow,left){
+    // the logo frame is always a 1:1 square
+    var sd=Math.min(w,h);x=left?x:x+(w-sd)/2;w=sd;h=sd;
+    if(shadow){g.save();g.shadowColor='rgba(0,0,0,.28)';g.shadowBlur=36;g.shadowOffsetY=14}
+    g.fillStyle=p.card;rr(g,x,y,w,h,34);g.fill();
+    if(shadow)g.restore();
+    var im=o.logo,pad=28;
+    if(im&&im.width){
+      var k=Math.min((w-pad*2)/im.width,(h-pad*2)/im.height),dw=im.width*k,dh=im.height*k;
+      g.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+    }else{
+      textBlock(g,o.base,x+w/2,y+h/2-Math.min(60,h*.25),w-pad*2,2,Math.min(84,h*.4),36,'700',p.ci,'center',1.15);
+    }
+  }
+  function tagPill(g,o,x,y,p,align,fillC,txtC){
+    var t='আমরা '+o.base+' Subscription বিক্রি করি';
+    g.font=fnt('700',36);var w=Math.min(PW-128,g.measureText(t).width+60);
+    var xx=align==='center'?x-w/2:x;
+    g.fillStyle=fillC||p.ac;rr(g,xx,y,w,68,34);g.fill();
+    centerText(g,t,xx+w/2,y+34,w-34,1,36,22,'700',txtC||(p.dark?p.ci:'#FFFFFF'),'center',1);
+    return w;
+  }
+  function contactLine(o){return [o.wa?'WhatsApp: '+o.wa:'',o.page?'Page: '+o.page:o.brand].filter(Boolean).join('   |   ')}
+  function footer(g,o,p,y,h,mode){
+    var wa=o.wa?'WhatsApp: '+o.wa:'',pg=o.page?'Page: '+o.page:o.brand;
+    if(mode==='bar'){
+      var tc=p.dark?p.ci:'#FFFFFF';
+      g.fillStyle=p.ac;rr(g,64,y,PW-128,h,34);g.fill();
+      centerText(g,'অর্ডার করতে এখনই মেসেজ করুন',PW/2,y+h*0.32,PW-170,1,46,28,'700',tc,'center',1);
+      centerText(g,contactLine(o),PW/2,y+h*0.72,PW-170,1,36,22,'600',tc,'center',1);
+    }else{
+      var band=mode==='band',tc2=band?(p.dark?p.ci:'#FFFFFF'):p.ink,tc3=band?tc2:p.sub,tc4=band?tc2:p.ac;
+      if(band){g.fillStyle=p.ac;g.fillRect(0,y,PW,PH-y)}else{g.fillStyle=alpha(p.ac,.9);g.fillRect(64,y,PW-128,4)}
+      var cy=band?y+(PH-y)/2:y+8+(h-8)/2;
+      centerText(g,o.brand,64,cy-24,470,1,50,28,'700',tc4,'left',1);
+      centerText(g,'অর্ডার করতে মেসেজ করুন',64,cy+26,470,1,32,22,'600',tc2,'left',1);
+      centerText(g,wa,PW-64,cy-24,500,1,44,26,'700',tc2,'right',1);
+      centerText(g,pg,PW-64,cy+26,500,1,32,22,'600',tc3,'right',1);
+    }
+  }
+
+  function centerText(g,t,x,cy,maxW,maxLines,s0,s1,wt,color,align,lh,maxH){
+    var f=fit(g,t,maxW,maxLines,s0,s1,wt);
+    if(maxH){var sz=s0;while(f.L.length*Math.round(f.s*(lh||1.22))>maxH&&sz>s1){sz=f.s-2;f=fit(g,t,maxW,maxLines,sz,s1,wt)}}
+    var step=Math.round(f.s*(lh||1.22)),tot=f.L.length*step;
+    g.font=fnt(wt,f.s);g.fillStyle=color;g.textAlign=align||'left';g.textBaseline='alphabetic';
+    var y0=cy-tot/2+f.s*0.95;
+    f.L.forEach(function(l,i){g.fillText(l,x,y0+i*step)});
+  }
+  function onAc(p){return p.dark?p.ci:'#FFFFFF'}
+  function dk(p){ // dark variant of any palette (for the spotlight layout)
+    var bg=p.dark?p.c1:p.ink;
+    return{dark:1,c1:bg,c2:bg,ac:p.dark?p.ac:'#FFD166',ink:'#FFFFFF',sub:'#C8D3DA',card:'#FFFFFF',ci:p.dark?p.ci:p.ink};
+  }
+  // features in two columns
+  function featGrid(g,o,p,x,y,w,hAv,style){
+    var n=o.feats.length,gap=18,rows=Math.ceil(n/2),cw=(w-gap)/2,rh=Math.min(150,(hAv-(rows-1)*gap)/rows);
+    o.feats.forEach(function(f,i){
+      var cx=x+(i%2)*(cw+gap),cy=y+Math.floor(i/2)*(rh+gap),tx=cx+30,tw=cw-60,col=p.ci;
+      if(style==='card'||style==='soft'){
+        g.save();if(style==='card'){g.shadowColor='rgba(0,0,0,.18)';g.shadowBlur=18;g.shadowOffsetY=6}
+        g.fillStyle=style==='card'?p.card:alpha(p.ci,.07);rr(g,cx,cy,cw,rh,26);g.fill();g.restore();
+        var bc=p.dark?p.c2:p.ac;circle(g,cx+44,cy+rh/2,26,bc);
+        g.font=fnt('700',30);g.fillStyle='#FFFFFF';g.textAlign='center';g.fillText(String(i+1),cx+44,cy+rh/2+11);
+        tx=cx+88;tw=cw-108;col=p.ci;
+      }else if(style==='outline'){
+        g.fillStyle=alpha(p.ink,.07);rr(g,cx,cy,cw,rh,26);g.fill();
+        g.strokeStyle=alpha(p.ink,.35);g.lineWidth=3;rr(g,cx+1.5,cy+1.5,cw-3,rh-3,25);g.stroke();
+        circle(g,cx+42,cy+rh/2,24,p.ac);tick(g,cx+42,cy+rh/2,34,onAc(p));
+        tx=cx+84;tw=cw-104;col=p.ink;
+      }else{ // tile
+        var k=i%3,fill=k===0?p.ac:(k===1?p.card:alpha(p.ink,.14));
+        col=k===0?onAc(p):(k===1?p.ci:p.ink);
+        g.save();g.shadowColor='rgba(0,0,0,.15)';g.shadowBlur=14;g.shadowOffsetY=5;g.fillStyle=fill;rr(g,cx,cy,cw,rh,26);g.fill();g.restore();
+        tx=cx+30;tw=cw-60;
+      }
+      centerText(g,f,tx,cy+rh/2,tw,3,42,22,'600',col,'left',1.18,rh-14);
+    });
+    return rows*(rh+gap)-gap;
+  }
+  // features in one column
+  function featList(g,o,p,x,y,w,hAv,style,numC){
+    var n=o.feats.length,rh=Math.min(122,hAv/n);
+    o.feats.forEach(function(f,i){
+      var cy=y+i*rh+rh/2,tx=x+86;
+      if(style==='check'){circle(g,x+32,cy,26,p.ac);tick(g,x+32,cy,36,onAc(p))}
+      else if(style==='num'){g.font=fnt('700',64);g.fillStyle=numC||p.ac;g.textAlign='left';g.fillText(('0'+(i+1)).slice(-2),x,cy+22);tx=x+110}
+      else{g.save();g.translate(x+30,cy);g.rotate(Math.PI/4);g.fillStyle=p.ac;g.fillRect(-14,-14,28,28);g.restore()}
+      centerText(g,f,tx,cy,w-(tx-x),2,48,22,'600',p.ink,'left',1.2,rh-8);
+      if(i<n-1){g.fillStyle=style==='num'?alpha(p.dark?p.ci:p.ink,.14):alpha(p.ink,.16);g.fillRect(x,y+(i+1)*rh-1,w,2)}
+    });
+  }
+
+  // ---- 8 structures ----
+  var ST=[];
+  // 0 centered stack + numbered cards
+  ST[0]=function(g,o,p){
+    bgGrad(g,p,1);circle(g,PW-60,110,240,alpha(p.ac,.13));circle(g,20,PH-320,200,alpha(p.ac,.10));
+    var h=textBlock(g,o.head,PW/2,66,PW-130,2,94,58,'700',p.ink,'center',1.16);
+    var y=66+h.h+12;tagPill(g,o,PW/2,y,p,'center');y+=60+30;
+    logoCard(g,o,PW/2-320,y,640,320,p,1);y+=320+30;
+    featGrid(g,o,p,64,y,PW-128,PH-236-y,'card');
+    footer(g,o,p,PH-206,150,'bar');
+  };
+  // 1 left aligned, order badge, check list
+  ST[1]=function(g,o,p){
+    bgGrad(g,p,0);
+    g.lineWidth=36;g.strokeStyle=alpha(p.ac,.14);g.beginPath();g.arc(PW-40,60,260,0,7);g.stroke();
+    g.strokeStyle=alpha(p.ac,.10);g.beginPath();g.arc(PW-40,60,380,0,7);g.stroke();
+    var h=textBlock(g,o.head,64,70,PW-128,2,92,56,'700',p.ink,'left',1.16);
+    var y=70+h.h+14;tagPill(g,o,64,y,p,'left');y+=60+28;
+    logoCard(g,o,64,y,270,270,p,1,true);
+    var bx=820,by=y+135;circle(g,bx,by,128,p.ac);g.lineWidth=5;g.strokeStyle=alpha(onAc(p),.55);g.beginPath();g.arc(bx,by,114,0,7);g.stroke();
+    centerText(g,'অর্ডার চলছে',bx,by-20,210,1,42,26,'700',onAc(p),'center',1.1);
+    centerText(g,'মেসেজ করুন',bx,by+36,210,1,32,22,'600',onAc(p),'center',1.1);
+    y+=270+26;
+    featList(g,o,p,64,y,PW-128,PH-190-y-10,'check');
+    footer(g,o,p,PH-170,110,'line');
+  };
+  // 2 dark spotlight, outlined features
+  ST[2]=function(g,o,p0){
+    var p=dk(p0);g.fillStyle=p.c1;g.fillRect(0,0,PW,PH);
+    var gr=g.createRadialGradient(PW/2,470,40,PW/2,470,620);gr.addColorStop(0,alpha(p.ac,.38));gr.addColorStop(1,alpha(p.ac,0));
+    g.fillStyle=gr;g.fillRect(0,0,PW,PH);
+    dots(g,60,PH-300,8,4,36,3,alpha('#FFFFFF',.18));dots(g,PW-330,60,8,3,36,3,alpha('#FFFFFF',.18));
+    var h=textBlock(g,o.head,PW/2,86,PW-140,2,94,58,'700','#FFFFFF','center',1.16);
+    var y=86+h.h+14;g.fillStyle=p.ac;rr(g,PW/2-90,y,180,10,5);g.fill();y+=10+34;
+    logoCard(g,o,PW/2-330,y,660,340,p,1);y+=340+26;
+    tagPill(g,o,PW/2,y,p,'center');y+=60+28;
+    featGrid(g,o,p,64,y,PW-128,PH-190-y,'outline');
+    footer(g,o,p,PH-168,100,'line');
+  };
+  // 3 diagonal band, numbered list on light ground
+  ST[3]=function(g,o,p){
+    g.fillStyle=p.dark?'#FFFFFF':p.c1;g.fillRect(0,0,PW,PH);
+    var gr=g.createLinearGradient(0,0,PW,500);gr.addColorStop(0,p.c1);gr.addColorStop(1,p.c2);
+    g.fillStyle=gr;g.beginPath();g.moveTo(0,0);g.lineTo(PW,0);g.lineTo(PW,430);g.lineTo(0,600);g.closePath();g.fill();
+    circle(g,PW-80,70,150,alpha(p.ac,.18));
+    tagPill(g,o,64,56,p,'left');
+    var h=textBlock(g,o.head,64,142,PW-128,2,88,54,'700',p.ink,'left',1.16);
+    logoCard(g,o,PW/2-310,410,620,290,p,1);
+    var y=724,base=p.dark?p.ci:p.ink;
+    featList(g,o,{dark:0,ci:p.ci,ink:p.dark?p.ci:p.ink,ac:p.ac},64,y,PW-128,PH-210-y,'num',p.dark?p.c2:p.ac);
+    footer(g,o,p,PH-190,190,'band');
+  };
+  // 4 card sheet
+  ST[4]=function(g,o,p){
+    bgGrad(g,p,1);dots(g,70,PH-150,10,2,36,3,alpha(p.ink,.18));
+    g.save();g.shadowColor='rgba(0,0,0,.30)';g.shadowBlur=44;g.shadowOffsetY=16;g.fillStyle='#FFFFFF';rr(g,36,36,PW-72,PH-72,46);g.fill();g.restore();
+    g.save();rr(g,36,36,PW-72,330,46);g.clip();
+    var gr=g.createLinearGradient(36,36,PW,366);gr.addColorStop(0,p.c1);gr.addColorStop(1,p.c2);g.fillStyle=gr;g.fillRect(36,36,PW-72,330);
+    circle(g,PW-110,80,160,alpha(p.ac,.22));g.restore();
+    centerText(g,o.head,PW/2,196,PW-180,2,84,46,'700',p.ink,'center',1.16);
+    var q={dark:0,c1:p.c1,c2:p.c2,ac:p.dark?p.c2:p.ac,ink:p.ci,sub:p.ci,card:'#F3F6F5',ci:p.ci};
+    g.fillStyle='#F3F6F5';rr(g,PW/2-125,330,250,250,34);g.fill();g.strokeStyle=alpha(q.ac,.5);g.lineWidth=4;rr(g,PW/2-123,332,246,246,33);g.stroke();
+    var im=o.logo;
+    if(im&&im.width){var k=Math.min(200/im.width,200/im.height);g.drawImage(im,PW/2-im.width*k/2,455-im.height*k/2,im.width*k,im.height*k)}
+    else textBlock(g,o.base,PW/2,455-40,210,2,56,26,'700',p.ci,'center',1.15);
+    var y=330+250+28;tagPill(g,o,PW/2,y,{ac:q.ac,dark:0,c1:p.c1},'center');y+=60+26;
+    featGrid(g,o,{dark:p.dark,ci:p.ci,ac:p.ac,c2:p.c2,card:'#fff'},64+10,y,PW-148,PH-250-y,'soft');
+    footer(g,o,{ac:q.ac,dark:0,ci:p.ci},PH-232,150,'bar');
+  };
+  // 5 big logo left, sale statement right, diamond list
+  ST[5]=function(g,o,p){
+    bgGrad(g,p,0);
+    g.save();g.globalAlpha=.10;g.strokeStyle=p.ink;g.lineWidth=14;for(var i=-4;i<12;i++){g.beginPath();g.moveTo(i*140,0);g.lineTo(i*140+700,PH);g.stroke()}g.restore();
+    g.fillStyle=p.ac;rr(g,64,64,300,56,28);g.fill();
+    centerText(g,'অর্ডার চলছে',214,92,270,1,30,20,'700',onAc(p),'center',1);
+    var h=textBlock(g,o.head,64,150,PW-128,2,96,60,'700',p.ink,'left',1.14);
+    var y=150+h.h+30;
+    logoCard(g,o,64,y,380,380,p,1);
+    centerText(g,'আমরা',500,y+58,500,1,38,26,'600',p.sub,'left',1);
+    centerText(g,o.base+' Subscription',500,y+148,516,2,66,36,'700',p.ac,'left',1.12);
+    centerText(g,'বিক্রি করি। অর্ডার করতে মেসেজ করুন।',500,y+292,516,2,42,28,'600',p.ink,'left',1.2);
+    y+=380+30;
+    featList(g,o,p,64,y,PW-128,PH-190-y,'diamond');
+    footer(g,o,p,PH-170,110,'line');
+  };
+  // 6 headline block, logo straddling, numbered list
+  ST[6]=function(g,o,p){
+    g.fillStyle=p.dark?p.c1:p.c1;g.fillRect(0,0,PW,PH);
+    var gr=g.createLinearGradient(0,0,PW,PH);gr.addColorStop(0,p.c1);gr.addColorStop(1,p.c2);g.fillStyle=gr;g.fillRect(0,0,PW,PH);
+    g.fillStyle=p.ac;rr(g,40,50,PW-80,360,40);g.fill();
+    circle(g,PW-130,120,120,alpha('#FFFFFF',.14));
+    centerText(g,o.head,PW/2,176,PW-200,2,92,50,'700',onAc(p),'center',1.14);
+    logoCard(g,o,PW/2-320,320,640,290,p,1);
+    var y=624;tagPill(g,o,PW/2,y,p,'center',alpha(p.ink,.18),p.ink);
+    y+=68+14;
+    featList(g,o,{dark:0,ci:p.ci,ink:p.ink,ac:p.ac},64,y,PW-128,PH-190-y,'num',p.ac);
+    footer(g,o,p,PH-170,110,'line');
+  };
+  // 7 tiles
+  ST[7]=function(g,o,p){
+    g.fillStyle=p.c1;g.fillRect(0,0,PW,PH);
+    var gr=g.createLinearGradient(0,0,PW,0);gr.addColorStop(0,p.c1);gr.addColorStop(1,p.c2);g.fillStyle=gr;g.fillRect(0,0,PW,PH);
+    g.save();g.globalAlpha=.09;g.fillStyle=p.ink;for(var i=0;i<14;i++)g.fillRect(0,i*30+20,PW,10);g.restore();
+    var h=textBlock(g,o.head,PW/2,70,PW-140,2,92,56,'700',p.ink,'center',1.16);
+    var y=70+h.h+22;
+    logoCard(g,o,64,y,PW-128,290,p,1);
+    y+=290+20;tagPill(g,o,PW/2,y,p,'center');y+=60+26;
+    featGrid(g,o,p,64,y,PW-128,PH-230-y,'tile');
+    footer(g,o,p,PH-190,190,'band');
+  };
+
+  function drawPoster(g,o,scale){
+    g.setTransform(scale||1,0,0,scale||1,0,0);g.clearRect(0,0,PW,PH);
+    ST[o.st](g,o,PAL[o.pal]);
+  }
+  // content for day k of product index pi
+  function posterOpts(pi,k,ov){
+    var p=P[pi],name=p[0],b=baseOf(name),pool=p[2].slice(),ex=XTRA[name]||[];
+    ex.forEach(function(x){pool.push(x)});
+    pool.push('দ্রুত অ্যাক্টিভেশন','অর্ডারের পরেও সাপোর্ট');
+    var st=(k+pi)%NSTRUCT,pal=(k*3+pi)%PAL.length,hi=(k*3+pi)%HEADS.length;
+    if(ov&&ov.st!=null)st=ov.st;if(ov&&ov.pal!=null)pal=ov.pal;if(ov&&ov.hi!=null)hi=ov.hi;
+    var grid=(st===0||st===2||st===4||st===7),cnt=grid?6:(k%3===0?5:6);
+    var rot=k%4,first=pool.slice(0,4),rest=pool.slice(4);
+    first=first.slice(rot).concat(first.slice(0,rot));
+    var feats=first.concat(rest).slice(0,cnt);
+    return{pi:pi,name:name,base:b,head:HEADS[hi](b),feats:feats,st:st,pal:pal,brand:S.brand.trim()||'Learnory Digital',wa:S.wa.trim(),page:S.page.trim(),logo:LOGOIMG[name]||null};
+  }
+  function posterCanvas(o,w){
+    var cv=document.createElement('canvas'),sc=w/PW;cv.width=w;cv.height=Math.round(PH*sc);
+    drawPoster(cv.getContext('2d'),o,sc);return cv;
+  }
+  function fontsReady(cb){
+    try{
+      Promise.all([document.fonts.load(fnt('700',60),'আমরা Subscription'),document.fonts.load(fnt('600',34),'আমরা Subscription')]).then(function(){cb()},function(){cb()});
+      setTimeout(cb,2500);
+    }catch(e){cb()}
+  }
+  // minimal ZIP (store only) for "download all posters"
+  var CRCT=null;
+  function crc32(u8){
+    if(!CRCT){CRCT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRCT[n]=c>>>0}}
+    var c2=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c2=CRCT[(c2^u8[i])&255]^(c2>>>8);return(c2^0xFFFFFFFF)>>>0;
+  }
+  function makeZip(files){ // files: [{name, data:Uint8Array}]
+    var parts=[],cd=[],off=0,enc=new TextEncoder();
+    function u16(v){return[v&255,v>>>8&255]}function u32(v){return[v&255,v>>>8&255,v>>>16&255,v>>>24&255]}
+    files.forEach(function(f){
+      var nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+      var lh=new Uint8Array([0x50,0x4b,3,4].concat(u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0)));
+      parts.push(lh,nm,f.data);
+      cd.push(new Uint8Array([0x50,0x4b,1,2].concat(u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))),nm);
+      off+=lh.length+nm.length+sz;
+    });
+    var cdSize=0;cd.forEach(function(x){cdSize+=x.length});
+    var end=new Uint8Array([0x50,0x4b,5,6].concat(u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(off),u16(0)));
+    return new Blob(parts.concat(cd,[end]),{type:'application/zip'});
+  }
+  function canvasBytes(cv,cb){cv.toBlob(function(b){var r=new FileReader();r.onload=function(){cb(new Uint8Array(r.result))};r.readAsArrayBuffer(b)},'image/png')}
   // ---------- campaigns, reminders, alarms, calendar, install ----------
   var ICON192='data:image/png;base64,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';
   var CKEY2='learnory-campaigns-v1',RKEY='learnory-reminders-v1';
@@ -839,23 +1313,28 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   // ---------- views ----------
   var cur=-1,days=[];
   function showView(v){
-    ['home','prod','rem','set'].forEach(function(k){$('panel-'+k).hidden=v!==k});
-    $('tab-home').setAttribute('aria-selected',v==='home'||v==='prod');
+    ['home','prod','mix','rem','set'].forEach(function(k){$('panel-'+k).hidden=v!==k});
+    $('tab-home').setAttribute('aria-selected',v==='home'||v==='prod'||v==='mix');
     $('tab-rem').setAttribute('aria-selected',v==='rem');
     $('tab-set').setAttribute('aria-selected',v==='set');
     if(v==='rem')renderReminders();
+    if(v==='set')renderLogos();
     window.scrollTo(0,0);
   }
   document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){
     var t=b.dataset.tab;showView(t==='home'?(cur>=0&&!$('panel-prod').hidden?'home':'home'):t);
   })});
   $('back').addEventListener('click',function(){cur=-1;showView('home')});
+  $('backMix').addEventListener('click',function(){showView('home')});
+  $('mixOpen').addEventListener('click',function(){openMix()});
 
   [['brand','brand'],['page','page'],['wa','wa']].forEach(function(p){
     var el=$(p[0]);el.value=S[p[1]]||'';
     el.addEventListener('input',function(){S[p[1]]=el.value;save()});
   });
 
+  $('tagN').value=S.tags==null?10:S.tags;
+  $('tagN').addEventListener('input',function(){var v=parseInt($('tagN').value,10);if(!(v>=0))v=0;if(v>12)v=12;S.tags=v;save()});
   // ---------- product list ----------
   function renderHome(){
     var q=$('q').value.trim().toLowerCase(),h='';
@@ -877,7 +1356,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     var c=findCamp(P[i][0]);
     if(c){$('startDate').value=c.start;$('nDays').value=c.days;$('series').value=c.series}
     else{$('startDate').value=iso(new Date());$('nDays').value=S.days||30;$('series').value=1}
-    updateRange();showView('prod');$('genBtn').textContent='Generate captions';
+    updateRange();refreshProdLogo();showView('prod');$('genBtn').textContent='Generate captions';
   }
   function getStart(){return $('startDate').value?new Date($('startDate').value+'T09:00:00'):new Date()}
   function getSeries(){var s=parseInt($('series').value,10);if(!(s>=1))s=1;if(s>5000)s=5000;return s}
@@ -899,7 +1378,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
       var c={n:name,line:p[1],feats:p[2],aud:aud,xtra:xtra,caveat:p[3],contact:ct,brand:brand,why0:WHY[0],whyRest:WHY.slice(1),tagsBase:p[4],cat:cat};
       var dt=new Date(start.getTime()+q*864e5);
       var text=caption(st,i,Math.floor(i/NSTYLE),c,dt,pi);
-      out.push({n:q+1,date:dt,name:name,caption:text,warns:seoCheck(text,c)});
+      out.push({n:q+1,date:dt,name:name,pi:pi,k:i,caption:text,seo:seoWords(c,i,pi),warns:seoCheck(text,c)});
     }
     return out;
   }
@@ -918,44 +1397,85 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fb)}else fb();
   }
   function autosize(ta){ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px'}
-  function allCaptionsText(){return days.map(function(d){return 'Day '+d.n+' ('+dateLabel(d.date)+')\n'+d.caption}).join('\n\n━━━━━━━━━━\n\n')}
-  function render(){
-    var box=$('results');box.innerHTML='';
-    if(!days.length)return;
-    var camp=findCamp(P[cur][0]);
+  function allCaptionsText(arr){return arr.map(function(d){return 'Day '+d.n+' ('+dateLabel(d.date)+') — '+d.name+'\n'+d.caption}).join('\n\n━━━━━━━━━━\n\n')}
+  function pName(d,mix){return (mix?('day'+two(d.n)+'-'+slug(d.name)):(slug(d.name)+'-day'+d.n))+'-poster.png'}
+  var PREV=[];
+  function drawPrev(cv,d){drawPoster(cv.getContext('2d'),posterOpts(d.pi,d.k,d.ov),cv.width/PW)}
+  function redrawPosters(){PREV.forEach(function(x){if(x.cv.isConnected)drawPrev(x.cv,x.d)});}
+  function canShareFiles(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'a.png',{type:'image/png'})]}))}catch(e){return false}}
+  function savePosterPng(d,mix,share){
+    var cv=posterCanvas(posterOpts(d.pi,d.k,d.ov),PW);
+    cv.toBlob(function(b){
+      if(!b){toast('Could not create the poster');return}
+      if(share){
+        try{navigator.share({files:[new File([b],pName(d,mix),{type:'image/png'})]}).catch(function(){})}catch(e){toast('Share is not available here')}
+      }else{saveBlob(b,pName(d,mix));toast('Poster downloading')}
+    },'image/png');
+  }
+  function zipPosters(arr,mix,name){
+    var files=[],i=0;toast('Preparing posters…');
+    (function nxt(){
+      if(i>=arr.length){saveBlob(makeZip(files),name);toast('ZIP downloading');return}
+      var d=arr[i++];
+      canvasBytes(posterCanvas(posterOpts(d.pi,d.k,d.ov),PW),function(u8){files.push({name:pName(d,mix),data:u8});setTimeout(nxt,0)});
+    })();
+  }
+  function saveEach(arr,mix){
+    var i=0;toast('Saving '+arr.length+' posters. If Chrome asks, allow multiple downloads.');
+    (function nxt(){
+      if(i>=arr.length)return;
+      var d=arr[i++];
+      posterCanvas(posterOpts(d.pi,d.k,d.ov),PW).toBlob(function(b){saveBlob(b,pName(d,mix));setTimeout(nxt,700)},'image/png');
+    })();
+  }
+  function render(box,arr,o){
+    box.innerHTML='';PREV=PREV.filter(function(x){return x.cv.isConnected});
+    if(!arr.length)return;
+    var camp=o.camp,mix=!!o.mix;
     var top=document.createElement('div');top.className='box';
-    var postedN=days.filter(function(d){return isPosted(camp,d.date)}).length;
-    top.innerHTML='<h2>'+esc(P[cur][0])+': '+days.length+' captions ready</h2><p class="tiny">Edit any caption if you like. Copy it, then schedule it on Facebook for that date. Tap "Mark as posted" after posting.</p><p class="tiny" id="postedSum">Posted: '+postedN+' / '+days.length+'</p>';
+    var postedN=arr.filter(function(d){return isPosted(camp,d.date)}).length;
+    top.innerHTML='<h2>'+esc(o.title)+'</h2><p class="tiny">Each day has a caption and a poster. Edit the caption if you like, save the poster, then schedule both on Facebook for that date.'+(mix?'':' Tap "Mark as posted" after posting.')+'</p>'+(mix?'':'<p class="tiny" id="postedSum">Posted: '+postedN+' / '+arr.length+'</p>')+(o.hint?'<p class="tiny" id="logoHint">'+esc(o.hint)+'</p>':'');
     var bulk=document.createElement('div');bulk.className='btnrow';
-    var ca=document.createElement('button');ca.className='btn primary';ca.id='copyAllBtn';ca.textContent='Copy all captions';
-    ca.addEventListener('click',function(){copyString(allCaptionsText())});
-    var t=document.createElement('button');t.className='btn';t.id='txtBtn';t.textContent='Download as TXT';
-    t.addEventListener('click',function(){saveBlob(new Blob([allCaptionsText()],{type:'text/plain;charset=utf-8'}),slug(P[cur][0])+'-captions.txt');toast('Downloading')});
-    bulk.appendChild(ca);bulk.appendChild(t);top.appendChild(bulk);box.appendChild(top);
-    var today=iso(new Date());
-    days.forEach(function(d,i){
-      var card=document.createElement('div');card.className='card';card.id='day'+d.n;
+    function mk(id,t,cls,fn){var b=document.createElement('button');b.className='btn '+cls;b.id=id;b.textContent=t;b.addEventListener('click',fn);bulk.appendChild(b)}
+    mk('copyAllBtn','Copy all captions','primary',function(){copyString(allCaptionsText(arr))});
+    mk('zipBtn','Download all posters (ZIP)','primary',function(){zipPosters(arr,mix,(mix?'mix':slug(arr[0].name))+'-posters.zip')});
+    mk('eachBtn','Save all posters as images','',function(){saveEach(arr,mix)});
+    mk('txtBtn','Download captions as TXT','',function(){saveBlob(new Blob([allCaptionsText(arr)],{type:'text/plain;charset=utf-8'}),(mix?'mix':slug(arr[0].name))+'-captions.txt');toast('Downloading')});
+    top.appendChild(bulk);box.appendChild(top);
+    var today=iso(new Date()),share=canShareFiles();
+    arr.forEach(function(d,i){
+      var card=document.createElement('div');card.className='card';card.id=(mix?'mday':'day')+d.n;
       var posted=isPosted(camp,d.date);if(posted)card.classList.add('posted');
       var meta=document.createElement('div');meta.className='meta';
-      meta.innerHTML='<b>Day '+d.n+'</b><span>'+dateLabel(d.date)+'</span>'+(iso(d.date)===today?'<span class="pill">Today</span>':'')+(posted?'<span class="pill ok">Posted ✓</span>':'');
-      var ta=document.createElement('textarea');ta.rows=Math.min(16,d.caption.split('\n').length+1);ta.value=d.caption;ta.id='cap'+i;ta.lang='bn';
+      meta.innerHTML='<b>Day '+d.n+'</b><span>'+dateLabel(d.date)+'</span>'+(mix?'<span class="pill">'+esc(d.name)+'</span>':'')+(iso(d.date)===today?'<span class="pill">Today</span>':'')+(posted?'<span class="pill ok">Posted ✓</span>':'');
+      var cv=document.createElement('canvas');cv.className='pv';cv.width=540;cv.height=675;cv.setAttribute('role','img');cv.setAttribute('aria-label','Poster for day '+d.n+': '+d.name);
+      PREV.push({cv:cv,d:d});
+      var ta=document.createElement('textarea');ta.rows=Math.min(16,d.caption.split('\n').length+1);ta.value=d.caption;ta.id=(mix?'mcap':'cap')+i;ta.lang='bn';
       ta.setAttribute('aria-label','Caption for day '+d.n);
       ta.addEventListener('input',function(){d.caption=ta.value;autosize(ta)});
       var act=document.createElement('div');act.className='actions';
-      var cp=document.createElement('button');cp.className='btn small primary';cp.textContent='Copy caption';
-      cp.addEventListener('click',function(){copyString(ta.value,ta)});
-      var pb=document.createElement('button');pb.className='btn small'+(posted?' done':'');pb.textContent=posted?'Posted ✓':'Mark as posted';
-      pb.addEventListener('click',function(){
-        var c=findCamp(P[cur][0]);if(!c)return;
-        var now=togglePosted(c,d.date);pb.className='btn small'+(now?' done':'');pb.textContent=now?'Posted ✓':'Mark as posted';
-        card.classList.toggle('posted',now);
-        meta.querySelectorAll('.pill.ok').forEach(function(x){x.remove()});if(now){var sp=document.createElement('span');sp.className='pill ok';sp.textContent='Posted ✓';meta.appendChild(sp)}
-        $('postedSum').textContent='Posted: '+days.filter(function(x){return isPosted(c,x.date)}).length+' / '+days.length;
-      });
-      act.appendChild(cp);act.appendChild(pb);
-      card.appendChild(meta);card.appendChild(ta);card.appendChild(act);
+      function ab(t,cls,fn){var b=document.createElement('button');b.className='btn small '+cls;b.textContent=t;b.addEventListener('click',fn);act.appendChild(b);return b}
+      ab('Copy caption','primary',function(){copyString(ta.value,ta)});
+      ab('Save poster','primary',function(){savePosterPng(d,mix,false)});
+      if(share)ab('Share poster','',function(){savePosterPng(d,mix,true)});
+      if(!mix){
+        var pb=ab(posted?'Posted ✓':'Mark as posted',posted?'done':'',function(){
+          var c=findCamp(d.name);if(!c)return;
+          var now=togglePosted(c,d.date);pb.className='btn small '+(now?'done':'');pb.textContent=now?'Posted ✓':'Mark as posted';
+          card.classList.toggle('posted',now);
+          meta.querySelectorAll('.pill.ok').forEach(function(x){x.remove()});if(now){var sp=document.createElement('span');sp.className='pill ok';sp.textContent='Posted ✓';meta.appendChild(sp)}
+          $('postedSum').textContent='Posted: '+arr.filter(function(x){return isPosted(c,x.date)}).length+' / '+arr.length;
+        });
+      }
+      var sd=document.createElement('details');sd.className='seo';
+      var sm=document.createElement('summary');sm.textContent='SEO keywords (separate, not part of the post)';sd.appendChild(sm);
+      var sp2=document.createElement('p');sp2.className='tiny seotxt';sp2.textContent=d.seo;sd.appendChild(sp2);
+      var sb=document.createElement('button');sb.className='btn small';sb.textContent='Copy keywords';sb.addEventListener('click',function(){copyString(d.seo)});sd.appendChild(sb);
+      card.appendChild(meta);card.appendChild(cv);card.appendChild(ta);card.appendChild(act);card.appendChild(sd);
       box.appendChild(card);autosize(ta);
     });
+    fontsReady(function(){redrawPosters()});
+    redrawPosters();
     setTimeout(function(){box.querySelectorAll('textarea').forEach(autosize)},300);
   }
 
@@ -965,11 +1485,82 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
     days=buildFor(cur,getStart(),getN(),(getSeries()-1)*30);
     trackSave();
     $('genBtn').textContent='Generate again';
-    render();renderHome();
+    render($('results'),days,{title:P[cur][0]+': '+days.length+' captions and posters ready',camp:findCamp(P[cur][0])});
+    renderHome();
     var r=$('results');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
-  window.__lpf={buildFor:buildFor,P:P,NSTYLE:NSTYLE,catOf:catOf,seoCheck:seoCheck,mkRng:mkRng,openProduct:openProduct};
+  // ---------- logos ----------
+  var lgKey=null;
+  function openLogoPicker(key){lgKey=key;$('logoFile').value='';$('logoFile').click()}
+  $('logoFile').addEventListener('change',function(){
+    var f=this.files[0];if(!f||!lgKey)return;var key=lgKey;
+    readLogoFile(f,function(url){
+      if(!url){toast('This file is not a usable picture');return}
+      logoPut(key,url,function(){toast('Logo saved for '+key);refreshProdLogo();renderLogos();redrawPosters()});
+    });
+  });
+  function logoThumb(key){return LOGOS[key]?'<img class="lgimg" alt="" src="'+LOGOS[key]+'">':'<span class="lgimg none">No logo</span>'}
+  function refreshProdLogo(){
+    if(cur<0)return;var n=P[cur][0];
+    $('lgThumb').innerHTML=logoThumb(n);$('lgDel').hidden=!LOGOS[n];$('lgUp').textContent=LOGOS[n]?'Replace logo':'Upload logo';
+    $('lgState').textContent=LOGOS[n]?'Logo is saved on this device.':'No logo yet. Until you upload one, the poster shows the product name as text.';
+  }
+  $('lgUp').addEventListener('click',function(){if(cur>=0)openLogoPicker(P[cur][0])});
+  $('lgDel').addEventListener('click',function(){if(cur<0)return;logoDel(P[cur][0]);refreshProdLogo();renderLogos();redrawPosters();toast('Logo removed')});
+  function renderLogos(){
+    var q=($('lgQ').value||'').trim().toLowerCase(),h='',have=0;
+    P.forEach(function(p){if(LOGOS[p[0]])have++});
+    $('lgCount').textContent=have+' of '+P.length+' products have a logo.';
+    P.forEach(function(p,i){
+      if(q&&p[0].toLowerCase().indexOf(q)<0)return;
+      h+='<div class="lgrow"><div class="lgcell">'+logoThumb(p[0])+'</div><b>'+esc(p[0])+'</b><span class="btnrow" style="flex:none"><button class="btn small" data-up="'+i+'">'+(LOGOS[p[0]]?'Replace':'Upload')+'</button>'+(LOGOS[p[0]]?'<button class="btn small" data-rm="'+i+'">Remove</button>':'')+'</span></div>';
+    });
+    $('lgList').innerHTML=h||'<p class="empty">No product with this name.</p>';
+  }
+  $('lgQ').addEventListener('input',renderLogos);
+  $('lgList').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.up!=null)openLogoPicker(P[+b.dataset.up][0]);
+    else if(b.dataset.rm!=null){logoDel(P[+b.dataset.rm][0]);renderLogos();refreshProdLogo();redrawPosters()}
+  });
+
+  // ---------- 15-day mix ----------
+  var mdays=[],mixSel={};
+  function openMix(){
+    $('mixStart').value=iso(new Date());$('mixResults').innerHTML='';mdays=[];renderMixList();showView('mix');
+  }
+  function renderMixList(){
+    $('mixList').innerHTML=P.map(function(p,i){return '<label class="chk"><input type="checkbox" data-i="'+i+'"'+(mixSel[i]?' checked':'')+'><span>'+esc(p[0])+'</span></label>'}).join('');
+    mixCount();
+  }
+  function mixCount(){var n=Object.keys(mixSel).filter(function(k){return mixSel[k]}).length;$('mixSelN').textContent=n+' selected'}
+  $('mixList').addEventListener('change',function(e){var c=e.target;if(c.dataset&&c.dataset.i!=null){mixSel[c.dataset.i]=c.checked;mixCount()}});
+  $('mixAll').addEventListener('click',function(){P.forEach(function(p,i){mixSel[i]=true});renderMixList()});
+  $('mixNone').addEventListener('click',function(){mixSel={};renderMixList()});
+  $('mixGen').addEventListener('click',function(){
+    var sel=[];P.forEach(function(p,i){if(mixSel[i])sel.push(i)});
+    if(!sel.length){toast('Select at least one product');return}
+    var n=parseInt($('mixDays').value,10);if(!(n>=1))n=1;if(n>60)n=60;
+    var ser=parseInt($('mixSeries').value,10);if(!(ser>=1))ser=1;if(ser>5000)ser=5000;
+    var start=$('mixStart').value?new Date($('mixStart').value+'T09:00:00'):new Date();
+    var rng=mkRng(ser*7919+sel.length*31),order=shuf(rng,sel),m=order.length;
+    mdays=[];var ps=-1,pp=-1,miss={};
+    for(var q=0;q<n;q++){
+      var pi=order[q%m],occ=Math.floor(q/m),dt=new Date(start.getTime()+q*864e5);
+      var b=buildFor(pi,dt,1,occ+(ser-1)*30)[0],o=posterOpts(pi,b.k),ov={};
+      if(o.st===ps)ov.st=(o.st+1)%NSTRUCT;
+      var st2=ov.st!=null?ov.st:o.st;ps=st2;
+      var pl=o.pal;if(pl===pp)pl=(pl+1)%PAL.length;pp=pl;if(pl!==o.pal)ov.pal=pl;
+      if(!LOGOS[b.name])miss[b.name]=1;
+      mdays.push({n:q+1,date:dt,name:b.name,pi:pi,k:b.k,ov:ov,caption:b.caption,seo:b.seo,warns:b.warns});
+    }
+    var ml=Object.keys(miss),hint=ml.length?('Logo missing for: '+ml.join(', ')+'. Their posters show the product name as text. Add logos in Settings → Product logos.'):'';
+    render($('mixResults'),mdays,{title:'Mix: '+n+' days of captions and posters ready',camp:null,mix:true,hint:hint});
+    var r=$('mixResults');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  window.__lpf={buildFor:buildFor,P:P,NSTYLE:NSTYLE,catOf:catOf,seoCheck:seoCheck,mkRng:mkRng,openProduct:openProduct,posterOpts:posterOpts,drawPoster:drawPoster,posterCanvas:posterCanvas,PAL:PAL,NSTRUCT:NSTRUCT,logoPut:logoPut,makeZip:makeZip,LOGOS:LOGOS};
   // ---------- own products + backup ----------
   var CKEY='learnory-custom-v1',BASE_LEN=P.length,CUST=[],editIdx=-1;
   try{CUST=JSON.parse(localStorage.getItem(CKEY)||'[]')||[]}catch(e){CUST=[]}
@@ -1036,6 +1627,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   });
 
   // ---------- start ----------
+  logoLoadAll(function(){renderLogos();redrawPosters()});
   mergeCustom();renderCust();renderHome();refreshNotifBtn();mirror();renderToday();renderReminders();checkAlerts();
   window.__trk={CAMP:function(){return CAMP},REM:function(){return REM},status:status,occInfo:occInfo,remDue:remDue,campIcs:campIcs,remIcs:remIcs,remGcal:remGcal,checkAlerts:checkAlerts,ring:ring,stopRing:stopRing};
 })();

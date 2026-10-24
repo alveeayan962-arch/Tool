@@ -1,5 +1,5 @@
 // Learnory Caption Studio service worker
-var VER='lpf-v2';
+var VER='lpf-v3';
 var SHELL=['./','index.html','manifest.webmanifest'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(VER).then(function(c){return Promise.all(SHELL.map(function(u){return c.add(u).catch(function(){})}))}).then(function(){return self.skipWaiting()}));

@@ -73,6 +73,15 @@ textarea{resize:vertical;line-height:1.6}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:15px;z-index:30;max-width:90vw;text-align:center}
 .toast[hidden]{display:none}
 input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.gx{font-size:13px;color:var(--muted)}
+.gx.ok{color:var(--ok);font-weight:600}
+.gx.warn{color:var(--warn);font-weight:600}
+.gx a{margin-left:8px;color:var(--accent);font-weight:600}
+.gxbar{background:#7A5200;color:#fff;border-radius:12px;padding:10px 14px;font-size:14px;cursor:pointer;margin:6px 0}
+.gxbar[hidden]{display:none}
+.gxmodal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.gxcard{background:var(--surface);color:var(--fg);border-radius:16px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.gxcard p{margin:0;font-size:15px;line-height:1.5}
 .alertbar{position:sticky;top:64px;z-index:20;background:#B4231A;color:#fff;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .alertbar[hidden]{display:none}
 .alertbar b{font-size:17px}
@@ -114,6 +123,7 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
   </div>
 
   <div class="alertbar" id="alertBar" role="alert" hidden></div>
+  <div class="gxbar" id="gxBar" role="button" tabindex="0" hidden><span></span> Tap to reconnect.</div>
 
   <!-- PRODUCTS -->
   <section class="panel" id="panel-home">
@@ -290,6 +300,18 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
         <button class="btn primary" id="cpSave">Save product</button>
         <button class="btn" id="cpClear">Clear form</button>
       </div>
+    </div>
+    <div class="box" id="gxBox">
+      <h2>Google account</h2>
+      <p class="tiny">Sign in once to (1) add reminders straight into Google Calendar with one tap and (2) keep your settings, own products, campaigns, reminders and logos backed up in your own Google Drive, so nothing is lost if you clear the browser or change phone. The backup sits in a hidden app folder that only this tool can open.</p>
+      <div class="tiny" id="gxState"></div>
+      <div class="btnrow">
+        <button class="btn primary" id="gxIn">Sign in with Google</button>
+        <button class="btn" id="gxSyncNow" hidden>Sync now</button>
+        <button class="btn" id="gxRestore" hidden>Restore from Drive</button>
+        <button class="btn" id="gxOut" hidden>Sign out</button>
+      </div>
+      <p class="tiny">Calendar events appear as a phone notification at the set time. They are not a ringing alarm. For ringing, set an alarm in the Clock app. Google asks you to sign in again about once an hour; the tool then continues syncing.</p>
     </div>
     <div class="box">
       <h2>Backup</h2>
@@ -1812,14 +1834,16 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
       h+='<div class="st" style="color:var(--warn)">⏰ '+c.days+'-day campaign ended ('+endLabel(c)+')</div><div class="tiny">Posted '+pc+' of '+c.days+'. Time to market again: a new series gives all-new captions.</div>'+
         '<div class="btnrow"><button class="btn primary small" data-act="restart">Start new series</button></div>';
     }
-    if(full)h+='<div class="btnrow"><button class="btn small" data-act="gdaily">Daily reminders → Google Calendar</button><button class="btn small" data-act="gcal">End alarm → Google Calendar</button><button class="btn small" data-act="ics">All → phone calendar file</button><button class="btn small" data-act="del">Delete</button></div>';
+    if(full&&window.__gx)h+=window.__gx.campBadges(c);
+    if(full)h+='<div class="btnrow">'+(window.__gx?window.__gx.campBtns(c):'<button class="btn small" data-act="gdaily">Daily reminders → Google Calendar</button><button class="btn small" data-act="gcal">End alarm → Google Calendar</button>')+'<button class="btn small" data-act="ics">All → phone calendar file</button><button class="btn small" data-act="del">Delete</button></div>';
     return h+'</div>';
   }
   function remRow(r){
     var o=occInfo(r),due=remDue(r),h='<div class="crow'+(due?' due':'')+'" data-id="'+r.id+'"><b>'+esc(remTitle(r))+'</b>';
     h+='<div class="st">'+(due?'⏰ Due now ('+fmtWhen(o.last)+')':(o.next?'Next: '+fmtWhen(o.next):'Finished ('+fmtWhen(o.last)+')'))+'</div><div class="tiny">'+REPNAME[r.rep||'none']+'</div>';
+    if(window.__gx)h+=window.__gx.remBadge(r);
     h+='<div class="btnrow">'+(due?'<button class="btn primary small" data-act="done">Done ✓</button>':'')+(r.prod?'<button class="btn small" data-act="open">Open product</button>':'')+
-      '<button class="btn small" data-act="gcal">Add to Google Calendar</button><button class="btn small" data-act="ics">Phone calendar file</button><button class="btn small" data-act="del">Delete</button></div>';
+      (window.__gx?window.__gx.remBtn(r):'<button class="btn small" data-act="gcal">Add to Google Calendar</button>')+'<button class="btn small" data-act="ics">Phone calendar file</button><button class="btn small" data-act="del">Delete</button></div>';
     return h+'</div>';
   }
   function renderToday(){
@@ -1855,18 +1879,21 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
     if(row.dataset.id){
       var r=null;REM.list.forEach(function(x){if(x.id===row.dataset.id)r=x});if(!r)return;
       if(act==='done'){r.ack=occInfo(r).last;r.snoozeUntil=0;saveRem();stopRing();$('alertBar').hidden=true}
-      else if(act==='del'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sure?';return}REM.list=REM.list.filter(function(x){return x!==r});saveRem()}
-      else if(act==='gcal'){window.open(remGcal(r),'_blank','noopener');return}
+      else if(act==='del'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sure?';return}if(window.__gx)window.__gx.dropRem(r);REM.list=REM.list.filter(function(x){return x!==r});saveRem()}
+      else if(act==='gcal'){if(window.__gx)window.__gx.addRem(r,b);else window.open(remGcal(r),'_blank','noopener');return}
+      else if(act==='gunlink'){if(window.__gx)window.__gx.unRem(r);return}
       else if(act==='ics'){saveBlob(new Blob([remIcs(r)],{type:'text/calendar;charset=utf-8'}),'reminder-'+slug(remTitle(r)||'reminder')+'.ics');toast('File downloaded. Open it and add it to your Calendar.');return}
       else if(act==='open'){openReminder(r);return}
     }else{
       var c=findCamp(row.dataset.n);if(!c)return;var s=status(c);
       if(act==='open')openCampaign(c,{start:c.start,series:c.series,scroll:s.k==='on'?s.idx:0});
       else if(act==='restart'){stopRing();$('alertBar').hidden=true;restartCampaign(c)}
-      else if(act==='del'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sure?';return}CAMP.list=CAMP.list.filter(function(x){return x!==c});saveCamp();$('alertBar').hidden=true;stopRing();renderHome()}
+      else if(act==='del'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sure?';return}if(window.__gx)window.__gx.dropCamp(c);CAMP.list=CAMP.list.filter(function(x){return x!==c});saveCamp();$('alertBar').hidden=true;stopRing();renderHome()}
       else if(act==='ics'){saveBlob(new Blob([campIcs(c)],{type:'text/calendar;charset=utf-8'}),slug(c.name)+'-campaign.ics');toast('File downloaded. Open it and add it to your Calendar.');return}
-      else if(act==='gcal'){window.open(campGcal(c),'_blank','noopener');return}
-      else if(act==='gdaily'){window.open(campDailyGcal(c),'_blank','noopener');return}
+      else if(act==='gcal'){if(window.__gx)window.__gx.addEnd(c,b);else window.open(campGcal(c),'_blank','noopener');return}
+      else if(act==='gdaily'){if(window.__gx)window.__gx.addDaily(c,b);else window.open(campDailyGcal(c),'_blank','noopener');return}
+      else if(act==='gunend'){if(window.__gx)window.__gx.unEnd(c);return}
+      else if(act==='gundaily'){if(window.__gx)window.__gx.unDaily(c);return}
     }
     renderToday();renderReminders();
   }
@@ -2010,7 +2037,8 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
   function autosize(ta){ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px'}
   function allCaptionsText(arr){return arr.map(function(d){return 'Day '+d.n+' ('+dateLabel(d.date)+') — '+d.name+'\n'+d.caption}).join('\n\n━━━━━━━━━━\n\n')}
   function pName(d,mix){return (mix?('day'+two(d.n)+'-'+slug(d.name)):(slug(d.name)+'-day'+d.n))+'-poster.png'}
-  var PREV=[];
+  var PREV=[],SESSR=null;
+  function sessCaps(arr){if(SESSR&&SESSR.caps&&SESSR.caps.length===arr.length)arr.forEach(function(d,i){if(typeof SESSR.caps[i]==='string')d.caption=SESSR.caps[i]})}
   function getO(d){if(!d._o)d._o=buildPoster(d.pi,d.k,d.ov);return d._o}
   var LASTR=[],SIMTXT='';
   function drawPrev(cv,d){drawPoster(cv.getContext('2d'),getO(d),cv.width/PW,true)}
@@ -2125,11 +2153,12 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
     S.days=getN();save();
     days=buildFor(cur,getStart(),getN(),(getSeries()-1)*30);
     assign(days.map(function(d){return{pi:d.pi,k:d.k}})).forEach(function(a,i){days[i].ov=a});
+    sessCaps(days);
     trackSave();
     $('genBtn').textContent='Generate again';
     render($('results'),days,{title:P[cur][0]+': '+days.length+' captions and posters ready',camp:findCamp(P[cur][0])});
     renderHome();
-    var r=$('results');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
+    var r=$('results');if(r.firstChild&&!SESSR)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
   // ---------- logos ----------
@@ -2195,9 +2224,10 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
       mdays.push({n:q+1,date:dt,name:b.name,pi:pi,k:b.k,ov:{},caption:b.caption,seo:b.seo,warns:b.warns});
     }
     assign(mdays.map(function(d){return{pi:d.pi,k:d.k}})).forEach(function(a,i){mdays[i].ov=a});
+    sessCaps(mdays);
     var ml=Object.keys(miss),hint=ml.length?('Logo missing for: '+ml.join(', ')+'. Their posters show the product name as text. Add logos in Settings → Product logos.'):'';
     render($('mixResults'),mdays,{title:'Mix: '+n+' days of captions and posters ready',camp:null,mix:true,hint:hint});
-    var r=$('mixResults');if(r.firstChild)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
+    var r=$('mixResults');if(r.firstChild&&!SESSR)r.firstChild.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
   window.__lpf={buildFor:buildFor,P:P,NSTYLE:NSTYLE,catOf:catOf,seoCheck:seoCheck,mkRng:mkRng,openProduct:openProduct,posterOpts:posterOpts,buildPoster:buildPoster,checkPoster:checkPoster,assign:assign,batchCheck:batchCheck,sigOf:sigOf,layoutDist:layoutDist,pngDims:pngDims,FONTSTATE:FONTSTATE,fontsReady:fontsReady,settingsIssues:settingsIssues,detOf:detOf,NCOMP:NCOMP,HERO:HERO,drawPoster:drawPoster,posterCanvas:posterCanvas,PAL:PAL,S:S,logoPut:logoPut,makeZip:makeZip,LOGOS:LOGOS};
@@ -2243,8 +2273,21 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
       saveCust();mergeCustom();renderCust();renderHome();toast('Deleted');
     }
   });
+  function applyBackup(d){
+    if(d.settings)['brand','page','wa','website','days','tags','det','detAll'].forEach(function(k){if(d.settings[k]!=null)S[k]=d.settings[k]});save();$('tagN').value=S.tags==null?'':S.tags;
+    if(Array.isArray(d.custom)){CUST=d.custom;saveCust()}
+    if(d.campaigns&&Array.isArray(d.campaigns.list)){CAMP=d.campaigns;saveCamp()}
+    if(d.reminders&&Array.isArray(d.reminders.list)){REM=d.reminders;saveRem()}
+    if(d.logos&&typeof d.logos==='object'){
+      Object.keys(LOGOS).slice().forEach(function(k){if(!(k in d.logos))logoDel(k)});
+      Object.keys(d.logos).forEach(function(k){if(typeof d.logos[k]==='string'&&LOGOS[k]!==d.logos[k])logoPut(k,d.logos[k],function(){redrawPosters()})});
+    }
+    mergeCustom();renderCust();renderHome();renderToday();renderReminders();
+    try{renderLogos()}catch(e){}
+    [['brand','brand'],['page','page'],['wa','wa'],['web','website']].forEach(function(p){$(p[0]).value=S[p[1]]||''});
+  }
   $('bkSave').addEventListener('click',function(){
-    var data={app:'learnory-caption-studio',v:2,settings:S,custom:CUST,campaigns:CAMP,reminders:REM};
+    var data={app:'learnory-caption-studio',v:3,settings:S,custom:CUST,campaigns:CAMP,reminders:REM,logos:LOGOS};
     saveBlob(new Blob([JSON.stringify(data)],{type:'application/json'}),'learnory-backup-'+iso(new Date())+'.json');toast('Backup downloading');
   });
   $('bkFile').addEventListener('change',function(){
@@ -2254,12 +2297,7 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
       try{
         var d=JSON.parse(rd.result);
         if(d.app!=='learnory-caption-studio'&&d.app!=='learnory-post-factory')throw 0;
-        if(d.settings)['brand','page','wa','website','days','tags','det','detAll'].forEach(function(k){if(d.settings[k]!=null)S[k]=d.settings[k]});save();$('tagN').value=S.tags==null?'':S.tags;
-        if(Array.isArray(d.custom)){CUST=d.custom;saveCust()}
-        if(d.campaigns&&Array.isArray(d.campaigns.list)){CAMP=d.campaigns;saveCamp()}
-        if(d.reminders&&Array.isArray(d.reminders.list)){REM=d.reminders;saveRem()}
-        mergeCustom();renderCust();renderHome();renderToday();renderReminders();
-        [['brand','brand'],['page','page'],['wa','wa'],['web','website']].forEach(function(p){$(p[0]).value=S[p[1]]||''});
+        applyBackup(d);
         toast('Backup restored');
       }catch(e){toast('This file is not a backup file')}
     };
@@ -2270,6 +2308,326 @@ canvas.pv{width:100%;height:auto;aspect-ratio:1/1;border-radius:12px;background:
   logoLoadAll(function(){renderLogos();redrawPosters()});
   mergeCustom();renderCust();renderHome();refreshNotifBtn();mirror();renderToday();renderReminders();checkAlerts();
   window.__trk={CAMP:function(){return CAMP},REM:function(){return REM},status:status,occInfo:occInfo,remDue:remDue,campIcs:campIcs,remIcs:remIcs,remGcal:remGcal,checkAlerts:checkAlerts,ring:ring,stopRing:stopRing};
+  // ---------- remember where the user was (survives tab discard / reopen) ----------
+  var SKEY='learnory-session-v1',SESS_TMR=null;
+  function sessView(){var v='home';['prod','mix','rem','set'].forEach(function(k){if(!$('panel-'+k).hidden)v=k});return v}
+  function sessSave(){
+    try{
+      var v=sessView(),o={v:v,t:Date.now(),y:Math.round(window.scrollY)};
+      if(v==='prod'&&cur>=0){o.pname=P[cur][0];o.start=$('startDate').value;o.n=$('nDays').value;o.ser=$('series').value;o.gen=days.length>0;o.caps=days.map(function(d){return d.caption})}
+      if(v==='mix'){o.mixSel=mixSel;o.ms=$('mixStart').value;o.md=$('mixDays').value;o.mser=$('mixSeries').value;o.gen=mdays.length>0;o.caps=mdays.map(function(d){return d.caption})}
+      localStorage.setItem(SKEY,JSON.stringify(o));
+    }catch(e){}
+  }
+  function sessSoon(){clearTimeout(SESS_TMR);SESS_TMR=setTimeout(sessSave,300)}
+  ['click','input','change'].forEach(function(ev){document.addEventListener(ev,sessSoon,true)});
+  window.addEventListener('scroll',sessSoon,{passive:true});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')sessSave()});
+  window.addEventListener('pagehide',sessSave);
+  function sessRestore(){
+    var s;try{s=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){}
+    if(!s||!s.v||Date.now()-(s.t||0)>14*864e5||s.v==='home')return;
+    try{
+      if(s.v==='prod'&&s.pname){
+        var i=-1;P.forEach(function(p,j){if(p[0]===s.pname)i=j});if(i<0)return;
+        openProduct(i);
+        if(s.start)$('startDate').value=s.start;if(s.n)$('nDays').value=s.n;if(s.ser)$('series').value=s.ser;updateRange();
+        if(s.gen){SESSR={caps:s.caps};$('genBtn').click();SESSR=null}
+      }else if(s.v==='mix'){
+        mixSel=s.mixSel||{};openMix();
+        if(s.ms)$('mixStart').value=s.ms;if(s.md)$('mixDays').value=s.md;if(s.mser)$('mixSeries').value=s.mser;
+        if(s.gen){SESSR={caps:s.caps};$('mixGen').click();SESSR=null}
+      }else showView(s.v);
+      [30,300,800,1500].forEach(function(ms){setTimeout(function(){window.scrollTo(0,s.y||0)},ms)});
+    }catch(e){}
+  }
+  sessRestore();
+  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.t==='lpf-updated')toast('A new version was downloaded. Close and reopen the app to use it.')});
+  // ---------- Google account: Calendar events + Drive backup (no server, runs in the browser) ----------
+  var GKEY='learnory-google-v1';
+  var GCID='996836054214-2hj6s4s3pk65mjo37k3n4ilbvalu5vf3.apps.googleusercontent.com';
+  var GSC='https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email openid';
+  var CALU='https://www.googleapis.com/calendar/v3/calendars/primary/events';
+  var DRV='https://www.googleapis.com/drive/v3/files',DUP='https://www.googleapis.com/upload/drive/v3/files',DNAME='learnory-backup.json';
+  var GX={};try{GX=JSON.parse(localStorage.getItem(GKEY)||'null')||{}}catch(e){GX={}}
+  var gxBusy=false,gxTmr=null,gxGisP=null,gxLastPull=0;
+  function gxSave(){try{localStorage.setItem(GKEY,JSON.stringify(GX))}catch(e){}}
+  function gxErr(code,msg){var e=new Error(msg||code);e.code=code;return e}
+  function gxTokOk(){return !!(GX.tok&&GX.exp>Date.now())}
+  function gxWeb(){return /^https?:$/.test(location.protocol)}
+
+  // --- Google Identity Services (token flow) ---
+  function gxLoadGis(){
+    if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
+    if(gxGisP)return gxGisP;
+    gxGisP=new Promise(function(res,rej){
+      var s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+      s.onload=function(){res()};s.onerror=function(){gxGisP=null;rej(gxErr('offline','offline'))};
+      document.head.appendChild(s);
+    });
+    return gxGisP;
+  }
+  function gxAsk(prompt){ // opens the Google window: call it from a tap
+    if(!gxWeb())return Promise.reject(gxErr('file','Google sign-in only works on the online (https) version of the tool.'));
+    return gxLoadGis().then(function(){return new Promise(function(res,rej){
+      var cfg={client_id:GCID,scope:GSC,
+        callback:function(r){
+          if(!r||r.error||!r.access_token){rej(gxErr('auth',(r&&r.error)||'denied'));return}
+          GX.tok=r.access_token;GX.exp=Date.now()+Math.max(60,(+r.expires_in||3600)-90)*1000;
+          if(r.scope){var sc=' '+r.scope+' ';GX.cal=sc.indexOf('/calendar.events')>=0;GX.drv=sc.indexOf('/drive.appdata')>=0}else{GX.cal=true;GX.drv=true}
+          gxSave();res(r.access_token);
+        },
+        error_callback:function(e){rej(gxErr('popup',(e&&e.type)||'popup'))}};
+      if(GX.email&&GX.email.indexOf('@')>0)cfg.login_hint=GX.email;
+      google.accounts.oauth2.initTokenClient(cfg).requestAccessToken({prompt:prompt||''});
+    })});
+  }
+  function gxAuth(inter){
+    if(gxTokOk())return Promise.resolve(GX.tok);
+    if(inter)return gxAsk('');
+    return Promise.reject(gxErr('auth','expired'));
+  }
+  function gxFetch(url,opt,inter,tried){
+    return gxAuth(inter).then(function(t){
+      var o=Object.assign({},opt||{});o.headers=Object.assign({},o.headers||{},{Authorization:'Bearer '+t});
+      return fetch(url,o).then(function(r){
+        if(r.status===401&&!tried){GX.tok='';GX.exp=0;gxSave();return gxFetch(url,opt,inter,true)}
+        return r;
+      },function(){throw gxErr('offline','offline')});
+    });
+  }
+  function gxJson(r){
+    return r.text().then(function(t){
+      var j=null;try{j=JSON.parse(t)}catch(e){}
+      if(!r.ok){var m=(j&&j.error&&(j.error.message||j.error))||('HTTP '+r.status);var e=gxErr(r.status===403?'perm':(r.status===401?'auth':'http'),String(m));e.status=r.status;throw e}
+      return j;
+    });
+  }
+  function gxWho(){return gxFetch('https://www.googleapis.com/oauth2/v3/userinfo',{},false).then(gxJson).then(function(j){return (j&&j.email)||''})}
+  function gxWhy(e){
+    var c=e&&e.code,m=(e&&e.message)||'';
+    if(c==='offline')return 'No internet connection.';
+    if(c==='popup')return 'The Google sign-in window was blocked or closed.';
+    if(c==='file')return m;
+    if(c==='auth')return 'Google session ended. Tap Sign in again.';
+    if(c==='perm')return 'Google refused ('+m+'). Sign out, sign in again and tick every permission box.';
+    return 'Google error: '+m;
+  }
+
+  // --- calendar ---
+  function gxIso(ms){var d=new Date(ms),o=-d.getTimezoneOffset(),s=o>=0?'+':'-';o=Math.abs(o);return d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate())+'T'+two(d.getHours())+':'+two(d.getMinutes())+':00'+s+two(Math.floor(o/60))+':'+two(o%60)}
+  function gxTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Dhaka'}catch(e){return 'Asia/Dhaka'}}
+  function gxId(key){ // deterministic event id (base32hex: 0-9 a-v), so adding twice never duplicates
+    var h1=5381,h2=7,i,c;for(i=0;i<key.length;i++){c=key.charCodeAt(i);h1=(((h1<<5)+h1)^c)>>>0;h2=(Math.imul(h2,31)+c)>>>0}
+    var a=h1.toString(32),b=h2.toString(32);while(a.length<7)a='0'+a;while(b.length<7)b='0'+b;
+    return 'lpf'+a+b+(key.length%32).toString(32);
+  }
+  function evRem(r){return {key:'rem|'+r.id,title:remTitle(r),desc:'Learnory Caption Studio reminder',at:occAt(r,0),rrule:RR[r.rep]||''}}
+  function evEnd(c){var e=addDays(pDate(c.start),c.days),t=hm(CAMP.time);
+    return {key:'end|'+c.name+'|'+c.start+'|'+c.days+'|'+(c.series||1),title:'🔔 '+c.name+'-এর মার্কেটিং শেষ হয়ে গেছে। আজকে নতুন করে মার্কেটিং করতে হবে',desc:'Caption Studio খুলে '+c.name+'-এর জন্য নতুন ক্যাপশন বানান, তারপর Facebook-এ শিডিউল করুন।',at:new Date(e.getFullYear(),e.getMonth(),e.getDate(),t[0],t[1]).getTime(),rrule:''}}
+  function evDaily(c){var s=pDate(c.start),t=hm(CAMP.time);
+    return {key:'day|'+c.name+'|'+c.start+'|'+c.days+'|'+(c.series||1),title:'আজ পোস্ট করুন: '+c.name,desc:'Caption Studio খুলে আজকের ক্যাপশন কপি করে Facebook-এ পোস্ট করুন।',at:new Date(s.getFullYear(),s.getMonth(),s.getDate(),t[0],t[1]).getTime(),rrule:'FREQ=DAILY;COUNT='+c.days}}
+  function gxBody(ev,id){
+    var tz=gxTz(),b={id:id,status:'confirmed',summary:ev.title,description:ev.desc,
+      start:{dateTime:gxIso(ev.at),timeZone:tz},end:{dateTime:gxIso(ev.at+15*60000),timeZone:tz},
+      reminders:{useDefault:false,overrides:[{method:'popup',minutes:0}]}};
+    if(ev.rrule)b.recurrence=['RRULE:'+ev.rrule];
+    return b;
+  }
+  function gxInsert(ev){
+    var id=gxId(ev.key),body=JSON.stringify(gxBody(ev,id)),H={'Content-Type':'application/json'};
+    return gxFetch(CALU,{method:'POST',headers:H,body:body},true).then(function(r){
+      if(r.status===409)return gxFetch(CALU+'/'+id,{method:'PUT',headers:H,body:body},true).then(gxJson); // existed or was deleted before: revive/update
+      return gxJson(r);
+    }).then(function(j){return {key:ev.key,id:(j&&j.id)||id,link:(j&&j.htmlLink)||'',at:ev.at,t:Date.now()}});
+  }
+  function gxDelEv(g){
+    if(!g||!g.id)return Promise.resolve();
+    return gxFetch(CALU+'/'+g.id,{method:'DELETE'},true).then(function(r){if(r.ok||r.status===404||r.status===410)return;return gxJson(r)});
+  }
+  function gxAfterIn(){ // after any successful sign-in: learn the e-mail, then sync Drive in the background
+    var p=GX.email?Promise.resolve():gxWho().then(function(m){GX.email=m||'google';gxSave()});
+    p.then(function(){gxStatus();return gxPull(false)}).catch(function(){gxStatus()});
+  }
+  function gxFail(e,tpl){
+    toast(gxWhy(e)+(tpl&&e.code!=='perm'?' Opened the Google Calendar page instead.':''));
+    if(tpl&&e.code!=='perm'){try{window.open(tpl,'_blank','noopener')}catch(x){}}
+  }
+  function gxAdd(holder,ev,slot,save,btn,tpl){
+    if(btn){btn.disabled=true;btn.dataset.t=btn.textContent;btn.textContent='Adding…'}
+    return gxInsert(ev).then(function(g){
+      holder[slot]=g;save();renderToday();renderReminders();
+      toast('✓ Added to Google Calendar. It pops up as a notification at that time.');
+      gxAfterIn();
+    },function(e){
+      if(btn){btn.disabled=false;btn.textContent=btn.dataset.t||btn.textContent}
+      gxFail(e,tpl);
+    });
+  }
+  function gxDrop(holder,slot,save,quiet){
+    var g=holder[slot];if(!g)return Promise.resolve();
+    return gxDelEv(g).then(function(){delete holder[slot];save();renderToday();renderReminders();if(!quiet)toast('Removed from Google Calendar')},function(e){
+      toast(gxWhy(e)+' Delete it in Google Calendar by hand.');
+    });
+  }
+  function linked(g,ev){return !!(g&&g.key===ev.key)}
+  function gxBadgeHtml(g,ev,label){
+    var l=label?'<b>'+label+':</b> ':'';
+    if(linked(g,ev)){
+      var st=g.at!==ev.at;
+      return '<div class="gx '+(st?'warn':'ok')+'">'+l+(st?'⚠ Time changed since it was added to Google Calendar':'✓ Already added to Google Calendar')+
+        (g.link&&/^https:\/\//.test(g.link)?' <a href="'+esc(g.link)+'" target="_blank" rel="noopener">View</a>':'')+'</div>';
+    }
+    return '<div class="gx">'+l+'Not in Google Calendar yet</div>';
+  }
+  function gxBtn(g,ev,act,unAct,txt,unTxt){
+    if(linked(g,ev)){
+      var st=g.at!==ev.at;
+      return (st?'<button class="btn small" data-act="'+act+'">Update Google Calendar</button>':'')+'<button class="btn small" data-act="'+unAct+'">'+unTxt+'</button>';
+    }
+    return '<button class="btn small" data-act="'+act+'">'+txt+'</button>';
+  }
+
+  // --- Drive backup ---
+  function gxPick(){var o={};['brand','page','wa','website','days','tags','det','detAll'].forEach(function(k){o[k]=S[k]});return o}
+  function gxPack(){return {app:'learnory-caption-studio',v:3,savedAt:Date.now(),settings:gxPick(),custom:CUST,campaigns:CAMP,reminders:REM,logos:LOGOS}}
+  function gxSig(){
+    var s=JSON.stringify([gxPick(),CUST,CAMP,REM])+Object.keys(LOGOS).sort().map(function(k){return k+':'+String(LOGOS[k]).length}).join(','),h=5381;
+    for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;
+    return h+':'+s.length;
+  }
+  function gxEmpty(){
+    try{
+      if(CUST.length||CAMP.list.length||REM.list.length||Object.keys(LOGOS).length)return false;
+      if(Object.keys(S.det||{}).length)return false;
+      var a=gxPick(),b={};['brand','page','wa','website','days','tags','det','detAll'].forEach(function(k){b[k]=DEFAULTS[k]});
+      return JSON.stringify(a)===JSON.stringify(b);
+    }catch(e){return false}
+  }
+  function gxFind(){
+    return gxFetch(DRV+'?spaces=appDataFolder&pageSize=10&orderBy=modifiedTime%20desc&fields='+encodeURIComponent('files(id,modifiedTime)')+'&q='+encodeURIComponent("name='"+DNAME+"'"),{},false)
+      .then(gxJson).then(function(j){return (j.files||[])[0]||null});
+  }
+  function gxDown(id){return gxFetch(DRV+'/'+id+'?alt=media',{},false).then(gxJson)}
+  function gxPut(fid){
+    var sg=gxSig(),body=gxPack(),meta={name:DNAME},bd='lpfb'+Date.now().toString(36);
+    if(!fid)meta.parents=['appDataFolder'];
+    var data='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify(body)+'\r\n--'+bd+'--';
+    return gxFetch((fid?DUP+'/'+fid:DUP)+'?uploadType=multipart&fields=id,modifiedTime',{method:fid?'PATCH':'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:data},false)
+      .then(gxJson).then(function(j){
+        GX.fid=j.id;GX.rmt=j.modifiedTime||'';GX.base=body.savedAt;GX.sig=sg;GX.dirty=(gxSig()!==sg);GX.lastSync=Date.now();GX.err='';gxSave();gxStatus();return 'up';
+      });
+  }
+  function gxApplyRemote(d,mt){
+    applyBackup(d);
+    GX.base=d.savedAt;GX.rmt=mt||'';GX.sig=gxSig();GX.dirty=false;GX.lastSync=Date.now();GX.err='';gxSave();gxStatus();
+  }
+  function gxWhen(ms){var d=new Date(ms);return dateLabel(d)+', '+two(d.getHours())+':'+two(d.getMinutes())}
+  function gxChoose(title,msg,labels){ // small dialog, resolves with the index of the chosen button (or -1)
+    return new Promise(function(res){
+      var o=document.createElement('div');o.className='gxmodal';o.id='gxModal';
+      o.innerHTML='<div class="gxcard" role="dialog"><b>'+esc(title)+'</b><p>'+esc(msg)+'</p><div class="btnrow"></div></div>';
+      var row=o.querySelector('.btnrow');
+      labels.forEach(function(l,i){var b=document.createElement('button');b.className='btn'+(i===0?' primary':'');b.textContent=l;b.dataset.i=i;b.addEventListener('click',function(){o.remove();res(i)});row.appendChild(b)});
+      document.body.appendChild(o);
+    });
+  }
+  // Make this device and Drive agree. force=true is the "Restore from Drive" button.
+  function gxPull(force){
+    if(gxBusy)return Promise.resolve('busy');
+    if(!GX.email||(!gxTokOk()))return Promise.resolve('noauth');
+    gxBusy=true;gxLastPull=Date.now();
+    var done=function(v){gxBusy=false;return v},fail=function(e){gxBusy=false;GX.err=gxWhy(e);gxSave();gxStatus();throw e};
+    return gxFind().then(function(f){
+      if(!f){GX.fid='';GX.rmt='';return gxEmpty()?'none':gxPut('')}
+      GX.fid=f.id;
+      if(!force&&GX.base&&GX.rmt&&f.modifiedTime===GX.rmt)return GX.dirty?gxPut(f.id):'same'; // Drive unchanged since our last sync
+      return gxDown(f.id).then(function(d){
+        if(!d||d.app!=='learnory-caption-studio')throw gxErr('http','Drive backup is not readable');
+        if(!force&&GX.base&&d.savedAt===GX.base){GX.rmt=f.modifiedTime;gxSave();return GX.dirty?gxPut(f.id):'same'}
+        var when=gxWhen(d.savedAt||Date.now()),takeDrive=function(){gxApplyRemote(d,f.modifiedTime);toast('✓ Data loaded from your Google Drive backup');return 'down'},keepHere=function(){return gxPut(f.id)};
+        if(force)return gxChoose('Restore from Google Drive?','This replaces the data on this device with the Drive backup from '+when+'.',['Restore from Drive','Cancel']).then(function(i){return i===0?takeDrive():'cancel'});
+        if(gxEmpty())return takeDrive();
+        if(GX.base&&!GX.dirty)return takeDrive(); // another device changed it, this one has no unsynced edits
+        return gxChoose('Two versions found','Your Google Drive backup ('+when+') and the data on this device are different. Which one should be kept?',['Use the Drive backup','Use this device\'s data']).then(function(i){return i===0?takeDrive():(i===1?keepHere():'cancel')});
+      });
+    }).then(done,fail);
+  }
+  function gxSched(){clearTimeout(gxTmr);gxTmr=setTimeout(function(){if(GX.email&&GX.dirty&&gxTokOk())gxPull(false).catch(function(){});else gxStatus()},3000)}
+  function gxTick(){
+    var s=gxSig();
+    if(s!==GX.sig){GX.sig=s;if(GX.email)GX.dirty=true;gxSave();if(GX.email)gxSched()}
+    else if(GX.email&&GX.dirty&&!gxBusy&&gxTokOk()&&!gxTmr)gxSched();
+    gxStatus();
+  }
+
+  // --- sign in / out + settings UI ---
+  function gxSignIn(){
+    return gxAsk('').then(function(){return gxWho()}).then(function(m){
+      if(GX.email&&m&&GX.email!==m&&GX.email!=='google'){REM.list.forEach(function(r){delete r.g});CAMP.list.forEach(function(c){delete c.gE;delete c.gD});saveRem();saveCamp();GX.base=0;GX.rmt='';GX.fid=''}
+      GX.email=m||'google';GX.err='';gxSave();gxStatus();renderToday();renderReminders();
+      if(GX.cal===false||GX.drv===false)toast('Some permissions were not ticked, so '+(GX.cal===false?'Calendar':'Drive backup')+' will not work. Sign out and sign in again.');
+      return gxPull(false);
+    });
+  }
+  function gxSignOut(){
+    try{if(GX.tok&&window.google&&google.accounts&&google.accounts.oauth2)google.accounts.oauth2.revoke(GX.tok,function(){})}catch(e){}
+    GX={sig:GX.sig};gxSave();gxStatus();renderToday();renderReminders();toast('Signed out. Your data stays on this device.');
+  }
+  function gxStatus(){
+    var st=$('gxState'),bar=$('gxBar');if(!st)return;
+    var inn=!!GX.email,ok=gxTokOk();
+    $('gxIn').hidden=inn&&ok;$('gxIn').textContent=inn?'Reconnect Google':'Sign in with Google';
+    $('gxSyncNow').hidden=!inn;$('gxRestore').hidden=!inn;$('gxOut').hidden=!inn;
+    var t;
+    if(!gxWeb())t='Google sign-in works only on the online version (the https:// link), not on a downloaded file.';
+    else if(!inn)t='Not signed in. Your data is only on this device.';
+    else{
+      t='Signed in as '+(GX.email==='google'?'your Google account':GX.email)+'. '+
+        (GX.lastSync?'Drive backup last synced '+gxWhen(GX.lastSync)+'.':'Drive backup not synced yet.')+
+        (GX.dirty?' Changes waiting to sync.':' Everything is backed up.')+
+        (ok?'':' Session expired: tap Reconnect Google.')+(GX.err?' ('+GX.err+')':'');
+    }
+    st.textContent=t;
+    if(bar){var show=inn&&!ok;bar.hidden=!show;if(show)bar.querySelector('span').textContent=GX.dirty?'Google backup paused: some changes are not backed up yet.':'Google sync paused (session expired).'}
+  }
+  function gxReconnect(){
+    return gxAsk('').then(function(){gxStatus();renderToday();renderReminders();return gxPull(false)}).catch(function(e){toast(gxWhy(e))});
+  }
+  $('gxIn').addEventListener('click',function(){var b=this;b.disabled=true;(GX.email?gxReconnect():gxSignIn().then(function(){toast('✓ Signed in with Google')})).catch(function(e){toast(gxWhy(e))}).then(function(){b.disabled=false;gxStatus()})});
+  $('gxOut').addEventListener('click',function(){gxSignOut()});
+  $('gxSyncNow').addEventListener('click',function(){
+    var b=this;b.disabled=true;
+    (gxTokOk()?Promise.resolve():gxAsk('')).then(function(){return gxPull(false)}).then(function(v){toast(v==='same'?'✓ Already up to date':(v==='up'?'✓ Backed up to Google Drive':(v==='busy'?'Sync already running':'✓ Synced')))}).catch(function(e){toast(gxWhy(e))}).then(function(){b.disabled=false;gxStatus()});
+  });
+  $('gxRestore').addEventListener('click',function(){
+    var b=this;b.disabled=true;
+    (gxTokOk()?Promise.resolve():gxAsk('')).then(function(){return gxPull(true)}).catch(function(e){toast(gxWhy(e))}).then(function(){b.disabled=false;gxStatus()});
+  });
+  $('gxBar').addEventListener('click',function(){gxReconnect()});
+
+  window.__gx={
+    remBadge:function(r){return gxBadgeHtml(r.g,evRem(r),'')},
+    remBtn:function(r){return gxBtn(r.g,evRem(r),'gcal','gunlink','Add to Google Calendar','Remove from Google Calendar')},
+    campBadges:function(c){return gxBadgeHtml(c.gD,evDaily(c),'Daily reminders')+gxBadgeHtml(c.gE,evEnd(c),'End alert')},
+    campBtns:function(c){return gxBtn(c.gD,evDaily(c),'gdaily','gundaily','Daily reminders → Google Calendar','Remove daily reminders from Calendar')+gxBtn(c.gE,evEnd(c),'gcal','gunend','End alarm → Google Calendar','Remove end alert from Calendar')},
+    addRem:function(r,b){var ev=evRem(r);return gxAdd(r,ev,'g',saveRem,b,remGcal(r))},
+    addEnd:function(c,b){return gxAdd(c,evEnd(c),'gE',saveCamp,b,campGcal(c))},
+    addDaily:function(c,b){return gxAdd(c,evDaily(c),'gD',saveCamp,b,campDailyGcal(c))},
+    unRem:function(r){return gxDrop(r,'g',saveRem)},
+    unEnd:function(c){return gxDrop(c,'gE',saveCamp)},
+    unDaily:function(c){return gxDrop(c,'gD',saveCamp)},
+    dropRem:function(r){return r.g?gxDrop(r,'g',function(){},true):Promise.resolve()},
+    dropCamp:function(c){return Promise.all([c.gE?gxDrop(c,'gE',function(){},true):0,c.gD?gxDrop(c,'gD',function(){},true):0])},
+    state:function(){return GX},pull:gxPull,sig:gxSig,pack:gxPack
+  };
+  gxStatus();renderToday();renderReminders();
+  setInterval(gxTick,4000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){gxStatus();if(GX.email&&gxTokOk()&&Date.now()-gxLastPull>60000)gxPull(false).catch(function(){})}});
+  if(GX.email){
+    if(gxWeb())setTimeout(function(){gxLoadGis().catch(function(){})},1500);
+    if(gxTokOk())setTimeout(function(){gxPull(false).catch(function(){})},1200);
+  }
 })();
 </script>
 </body>

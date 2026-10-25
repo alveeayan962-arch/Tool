@@ -1,5 +1,5 @@
 // Learnory Caption Studio service worker
-var VER='lpf-v5';
+var VER='lpf-v7';
 var SHELL=['./','index.html','manifest.webmanifest','fonts/HindSiliguri-500.woff2','fonts/HindSiliguri-600.woff2','fonts/HindSiliguri-700.woff2'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(VER).then(function(c){return Promise.all(SHELL.map(function(u){return c.add(u).catch(function(){})}))}).then(function(){return self.skipWaiting()}));
@@ -22,12 +22,20 @@ self.addEventListener('fetch',function(e){
     return;
   }
   if(url.origin!==location.origin)return;
-  // app files: network first (so a new upload shows up), cache as offline fallback
-  e.respondWith(fetch(req).then(function(r){
-    if(r&&r.ok){var cp=r.clone();caches.open(VER).then(function(c){c.put(req,cp)})}
-    return r;
-  }).catch(function(){
-    return caches.match(req,{ignoreSearch:true}).then(function(hit){return hit||(req.mode==='navigate'?caches.match('index.html'):undefined)||caches.match('./')});
+  // app files: open instantly from the saved copy, fetch the newest copy in the background
+  e.respondWith(caches.open(VER).then(function(c){
+    return c.match(req,{ignoreSearch:true}).then(function(hit){
+      var net=fetch(req).then(function(r){
+        if(r&&r.ok){
+          var tag=function(x){return x?(x.headers.get('etag')||x.headers.get('last-modified')||x.headers.get('content-length')||''):''};
+          if(hit&&tag(hit)&&tag(hit)!==tag(r)&&req.mode==='navigate'){self.clients.matchAll().then(function(cl){cl.forEach(function(k){k.postMessage({t:'lpf-updated'})})})}
+          c.put(req,r.clone());
+        }
+        return r;
+      }).catch(function(){return hit||(req.mode==='navigate'?c.match('index.html'):undefined)});
+      if(hit){e.waitUntil(net.catch(function(){}));return hit}
+      return net;
+    });
   }));
 });
 self.addEventListener('notificationclick',function(e){
